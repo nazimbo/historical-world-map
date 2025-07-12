@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical Interactive World Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header>
+            <h1>Historical Interactive World Map</h1>
+            <p>Explore the changing political borders of nations and empires throughout history</p>
+        </header>
+
+        <!-- Map Container -->
+        <div id="map-container">
+            <div id="map"></div>
+            
+            <!-- Loading indicator -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Loading historical data...</p>
+            </div>
+        </div>
+
+        <!-- Time Controls -->
+        <div id="time-controls">
+            <div class="slider-container">
+                <label for="time-slider">Historical Period:</label>
+                <input type="range" id="time-slider" min="0" max="51" value="0" step="1">
+                <div class="slider-labels">
+                    <span>123000 BC</span>
+                    <span>10000 BC</span>
+                    <span>5000 BC</span>
+                    <span>1000 BC</span>
+                    <span>323 BC</span>
+                    <span>1 BC</span>
+                    <span>500 AD</span>
+                    <span>1000 AD</span>
+                    <span>1492 AD</span>
+                    <span>1783 AD</span>
+                    <span>1914 AD</span>
+                    <span>2010 AD</span>
+                </div>
+                <div id="current-period">1000 BC</div>
+            </div>
+        </div>
+
+        <!-- Territory Info Panel -->
+        <div id="info-panel" class="hidden">
+            <div class="info-header">
+                <h3 id="territory-name">Territory Information</h3>
+                <button id="close-info">&times;</button>
+            </div>
+            <div class="info-content">
+                <p id="territory-details">Click on a territory to see information</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Data source: <a href="https://github.com/aourednik/historical-basemaps" target="_blank">Historical Basemaps</a></p>
+            <p><em>Note: Historical boundaries are approximations for educational purposes</em></p>
+        </footer>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
