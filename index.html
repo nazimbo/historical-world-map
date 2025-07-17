@@ -27,9 +27,8 @@
 <body>
     <div id="app">
         <!-- Header -->
-        <header>
+        <header class="backdrop-blur-10">
             <h1>Historical Interactive World Map</h1>
-            <p>Explore the changing political borders of nations and empires throughout history</p>
         </header>
 
         <!-- Map Container -->
@@ -37,29 +36,22 @@
             <div id="map"></div>
             
             <!-- Loading indicator -->
-            <div id="loading" class="loading hidden">
+            <div id="loading" class="loading backdrop-blur-20 hidden">
                 <div class="spinner"></div>
                 <p>Loading historical data...</p>
             </div>
         </div>
 
         <!-- Time Controls -->
-        <div id="time-controls">
+        <div id="time-controls" class="backdrop-blur-15">
             <div class="slider-container">
-                <label for="time-slider">Historical Period:</label>
                 <input type="range" id="time-slider" min="0" max="51" value="0" step="1">
                 <div class="slider-labels">
                     <span>123000 BC</span>
-                    <span>10000 BC</span>
-                    <span>5000 BC</span>
                     <span>1000 BC</span>
-                    <span>323 BC</span>
                     <span>1 BC</span>
-                    <span>500 AD</span>
                     <span>1000 AD</span>
                     <span>1492 AD</span>
-                    <span>1783 AD</span>
-                    <span>1914 AD</span>
                     <span>2010 AD</span>
                 </div>
                 <div id="current-period">1000 BC</div>
@@ -67,7 +59,7 @@
         </div>
 
         <!-- Territory Info Panel -->
-        <div id="info-panel" class="hidden">
+        <div id="info-panel" class="backdrop-blur-20 hidden">
             <div class="info-header">
                 <h3 id="territory-name">Territory Information</h3>
                 <button id="close-info">&times;</button>
@@ -78,9 +70,8 @@
         </div>
 
         <!-- Footer -->
-        <footer>
+        <footer class="backdrop-blur-10">
             <p>Data source: <a href="https://github.com/aourednik/historical-basemaps" target="_blank">Historical Basemaps</a></p>
-            <p><em>Note: Historical boundaries are approximations for educational purposes</em></p>
         </footer>
     </div>
 

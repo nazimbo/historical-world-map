@@ -20,11 +20,25 @@ body {
     height: 100vh;
 }
 
+/* Shared backdrop filter styles */
+.backdrop-blur-10 {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.backdrop-blur-15 {
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.backdrop-blur-20 {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
 /* Header styles - Minimalistic */
 header {
     background: rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     color: white;
     padding: 0.75rem 1rem;
     text-align: center;
@@ -45,9 +59,6 @@ header h1 {
     letter-spacing: -0.01em;
 }
 
-header p {
-    display: none;
-}
 
 /* Map container - Full focus */
 #map-container {
@@ -74,8 +85,6 @@ header p {
     left: 50%;
     transform: translate(-50%, -50%);
     background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 2.5rem;
     border-radius: 20px;
@@ -111,14 +120,13 @@ header p {
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 1rem 1.5rem;
     border-radius: 16px;
     z-index: 1000;
-    min-width: 320px;
-    max-width: 500px;
+    min-width: 500px;
+    max-width: 800px;
+    width: 70vw;
 }
 
 .slider-container {
@@ -126,9 +134,6 @@ header p {
     margin: 0 auto;
 }
 
-.slider-container label {
-    display: none;
-}
 
 #time-slider {
     width: 100%;
@@ -169,9 +174,31 @@ header p {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+
 .slider-labels {
-    display: none;
+    position: relative;
+    display: flex;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+    height: 1rem;
 }
+
+.slider-labels span {
+    position: absolute;
+    font-weight: 400;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    padding: 0.25rem 0;
+}
+
+.slider-labels span:nth-child(1) { left: 0%; }      /* 123000 BC - index 0 */
+.slider-labels span:nth-child(2) { left: 15.69%; }  /* 1000 BC - index 8 */
+.slider-labels span:nth-child(3) { left: 31.37%; }  /* 1 BC - index 16 */
+.slider-labels span:nth-child(4) { left: 50.98%; }  /* 1000 AD - index 26 */
+.slider-labels span:nth-child(5) { left: 62.75%; }  /* 1492 AD - index 32 */
+.slider-labels span:nth-child(6) { left: 100%; }    /* 2010 AD - index 51 */
 
 #current-period {
     text-align: center;
@@ -189,8 +216,6 @@ header p {
     right: 20px;
     width: 320px;
     background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -246,7 +271,6 @@ footer {
     bottom: 20px;
     right: 20px;
     background: rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: rgba(255, 255, 255, 0.7);
     padding: 0.5rem 0.75rem;
@@ -273,9 +297,6 @@ footer p {
     line-height: 1.3;
 }
 
-footer p:last-child {
-    display: none;
-}
 
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
@@ -307,6 +328,7 @@ footer p:last-child {
         transform: none;
         min-width: auto;
         max-width: none;
+        width: auto;
         padding: 1rem;
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -330,6 +352,22 @@ footer p:last-child {
         border: 3px solid rgba(255, 255, 255, 0.8);
     }
     
+    .slider-labels {
+        font-size: 0.6rem;
+        margin-top: 0.3rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .slider-labels span {
+        display: none;
+    }
+
+    .slider-labels span:first-child,
+    .slider-labels span:nth-child(3),
+    .slider-labels span:last-child {
+        display: inline;
+    }
+
     #current-period {
         font-size: 1rem;
         margin-top: 0.5rem;
@@ -420,6 +458,21 @@ footer p:last-child {
         border: 4px solid rgba(255, 255, 255, 0.9);
     }
     
+    .slider-labels {
+        font-size: 0.55rem;
+        margin-top: 0.2rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .slider-labels span {
+        display: none;
+    }
+
+    .slider-labels span:first-child,
+    .slider-labels span:last-child {
+        display: inline;
+    }
+
     #current-period {
         font-size: 0.9rem;
         margin-top: 0.4rem;
@@ -527,12 +580,6 @@ footer p:last-child {
     box-shadow: none !important;
 }
 
-/* Territory highlighting */
-.territory-highlight {
-    stroke: rgba(255, 255, 255, 0.9) !important;
-    stroke-width: 3 !important;
-    stroke-opacity: 1 !important;
-}
 
 /* Landscape orientation optimizations */
 @media (max-width: 768px) and (orientation: landscape) {
