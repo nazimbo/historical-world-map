@@ -87,13 +87,21 @@ class HistoricalMap {
      * Initialize the Leaflet map
      */
     initMap() {
+        // Define world bounds to prevent infinite panning
+        const worldBounds = L.latLngBounds(
+            L.latLng(-85, -180), // Southwest corner
+            L.latLng(85, 180)    // Northeast corner
+        );
+
         // Create map centered on the world
         this.map = L.map('map', {
             center: [20, 0], // Centered on equator
             zoom: 2,
             minZoom: 1,
             maxZoom: 8,
-            worldCopyJump: true
+            worldCopyJump: false, // Disable world copy jump for bounded map
+            maxBounds: worldBounds, // Set maximum bounds
+            maxBoundsViscosity: 1.0 // Make bounds completely solid
         });
 
         // Add base tile layer (light background for historical data)

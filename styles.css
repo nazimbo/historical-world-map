@@ -277,80 +277,231 @@ footer p:last-child {
     display: none;
 }
 
-/* Responsive design */
+/* Mobile-first responsive design */
 @media (max-width: 768px) {
+    body {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        touch-action: manipulation;
+    }
+    
     header {
-        top: 10px;
-        left: 10px;
-        right: 10px;
-        padding: 0.5rem 0.75rem;
+        top: env(safe-area-inset-top, 10px);
+        left: env(safe-area-inset-left, 10px);
+        right: env(safe-area-inset-right, 10px);
+        padding: 0.6rem 0.8rem;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        background: rgba(0, 0, 0, 0.15);
     }
     
     header h1 {
         font-size: 1.1rem;
+        line-height: 1.2;
     }
     
     #time-controls {
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
+        bottom: env(safe-area-inset-bottom, 10px);
+        left: env(safe-area-inset-left, 10px);
+        right: env(safe-area-inset-right, 10px);
         transform: none;
         min-width: auto;
         max-width: none;
-        padding: 0.75rem 1rem;
+        padding: 1rem;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        background: rgba(0, 0, 0, 0.25);
+    }
+    
+    #time-slider {
+        height: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    #time-slider::-webkit-slider-thumb {
+        width: 28px;
+        height: 28px;
+        border: 3px solid rgba(255, 255, 255, 0.8);
+    }
+    
+    #time-slider::-moz-range-thumb {
+        width: 28px;
+        height: 28px;
+        border: 3px solid rgba(255, 255, 255, 0.8);
     }
     
     #current-period {
-        font-size: 0.9rem;
+        font-size: 1rem;
         margin-top: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     #info-panel {
         width: calc(100% - 20px);
         max-width: none;
-        left: 10px;
-        right: 10px;
-        top: 60px;
+        left: env(safe-area-inset-left, 10px);
+        right: env(safe-area-inset-right, 10px);
+        top: calc(env(safe-area-inset-top, 10px) + 70px);
+        max-height: calc(100vh - 200px);
+    }
+    
+    .info-header {
+        padding: 1rem;
+        touch-action: manipulation;
+    }
+    
+    .info-content {
+        padding: 1rem;
+        line-height: 1.6;
+    }
+    
+    #close-info {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        touch-action: manipulation;
     }
     
     footer {
         display: none;
     }
+    
+    /* Better touch targets */
+    .leaflet-control-zoom a {
+        width: 40px !important;
+        height: 40px !important;
+        line-height: 40px !important;
+        font-size: 18px !important;
+    }
+    
+    .leaflet-control-zoom {
+        margin-top: 80px !important;
+        margin-left: 10px !important;
+    }
 }
 
 @media (max-width: 480px) {
+    header {
+        top: env(safe-area-inset-top, 5px);
+        left: env(safe-area-inset-left, 5px);
+        right: env(safe-area-inset-right, 5px);
+        padding: 0.5rem 0.6rem;
+    }
+    
     header h1 {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
     
     #time-controls {
-        bottom: 5px;
-        left: 5px;
-        right: 5px;
-        padding: 0.6rem 0.8rem;
+        bottom: env(safe-area-inset-bottom, 5px);
+        left: env(safe-area-inset-left, 5px);
+        right: env(safe-area-inset-right, 5px);
+        padding: 0.8rem;
         border-radius: 12px;
     }
     
+    #time-slider {
+        height: 10px;
+        margin-bottom: 0.8rem;
+    }
+    
+    #time-slider::-webkit-slider-thumb {
+        width: 32px;
+        height: 32px;
+        border: 4px solid rgba(255, 255, 255, 0.9);
+    }
+    
+    #time-slider::-moz-range-thumb {
+        width: 32px;
+        height: 32px;
+        border: 4px solid rgba(255, 255, 255, 0.9);
+    }
+    
     #current-period {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         margin-top: 0.4rem;
+        padding: 0.6rem 0.8rem;
     }
     
     #info-panel {
-        top: 50px;
-        left: 5px;
-        right: 5px;
+        top: calc(env(safe-area-inset-top, 5px) + 60px);
+        left: env(safe-area-inset-left, 5px);
+        right: env(safe-area-inset-right, 5px);
         border-radius: 8px;
+        max-height: calc(100vh - 180px);
+    }
+    
+    .info-header {
+        padding: 0.8rem;
+    }
+    
+    .info-content {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Larger touch targets for small screens */
+    .leaflet-control-zoom a {
+        width: 44px !important;
+        height: 44px !important;
+        line-height: 44px !important;
+        font-size: 20px !important;
+    }
+    
+    .leaflet-control-zoom {
+        margin-top: 70px !important;
+        margin-left: 5px !important;
     }
 }
 
 @media (max-width: 360px) {
+    header {
+        padding: 0.4rem 0.5rem;
+    }
+    
     header h1 {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+    }
+    
+    #time-controls {
+        padding: 0.6rem;
+    }
+    
+    #time-slider {
+        height: 12px;
+    }
+    
+    #time-slider::-webkit-slider-thumb {
+        width: 36px;
+        height: 36px;
+    }
+    
+    #time-slider::-moz-range-thumb {
+        width: 36px;
+        height: 36px;
     }
     
     #current-period {
         font-size: 0.8rem;
+        padding: 0.5rem 0.6rem;
+    }
+    
+    .info-header {
+        padding: 0.6rem;
+    }
+    
+    .info-content {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
+    
+    #close-info {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
     }
 }
 
@@ -381,6 +532,54 @@ footer p:last-child {
     stroke: rgba(255, 255, 255, 0.9) !important;
     stroke-width: 3 !important;
     stroke-opacity: 1 !important;
+}
+
+/* Landscape orientation optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+    header {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    header h1 {
+        font-size: 0.9rem;
+    }
+    
+    #time-controls {
+        padding: 0.6rem 0.8rem;
+        border-radius: 8px;
+    }
+    
+    #current-period {
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+        padding: 0.3rem 0.6rem;
+    }
+    
+    #info-panel {
+        max-height: calc(100vh - 120px);
+        width: 300px;
+        left: auto;
+        right: env(safe-area-inset-right, 10px);
+        top: calc(env(safe-area-inset-top, 10px) + 50px);
+    }
+}
+
+/* iOS-specific improvements */
+@supports (-webkit-touch-callout: none) {
+    body {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    #time-slider {
+        -webkit-appearance: none;
+    }
+    
+    #time-slider::-webkit-slider-track {
+        -webkit-appearance: none;
+    }
 }
 
 /* Additional minimalist touches */
