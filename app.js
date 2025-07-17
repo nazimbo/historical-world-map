@@ -66,6 +66,8 @@ class HistoricalMap {
         this.currentLayer = null;
         this.map = null;
         this.isLoading = false;
+        this.selectedFeature = null; // Track selected feature
+        this.selectedLayer = null;   // Track selected layer
 
         // Initialize the application
         this.init();
@@ -196,6 +198,9 @@ class HistoricalMap {
      * @param {Object} period - Period information
      */
     updateMap(geoJsonData, period) {
+        // Clear any existing selection
+        this.clearSelection();
+        
         // Remove previous layer with fade out effect
         if (this.currentLayer) {
             this.map.removeLayer(this.currentLayer);
@@ -216,11 +221,17 @@ class HistoricalMap {
 
                 // Add hover effects
                 layer.on('mouseover', (e) => {
-                    this.highlightFeature(e.target);
+                    // Only highlight if not already selected
+                    if (this.selectedLayer !== e.target) {
+                        this.highlightFeature(e.target);
+                    }
                 });
 
                 layer.on('mouseout', (e) => {
-                    this.resetHighlight(e.target);
+                    // Only reset if not the selected layer
+                    if (this.selectedLayer !== e.target) {
+                        this.resetHighlight(e.target);
+                    }
                 });
             }
         });
@@ -263,10 +274,43 @@ class HistoricalMap {
     }
 
     /**
+     * Select a feature (persistent highlight)
+     * @param {Object} layer - Leaflet layer
+     */
+    selectFeature(layer) {
+        layer.setStyle({
+            weight: 4,
+            color: '#f39c12',
+            fillColor: '#f39c12',
+            fillOpacity: 0.9
+        });
+        
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            layer.bringToFront();
+        }
+    }
+
+    /**
+     * Clear current selection
+     */
+    clearSelection() {
+        if (this.selectedLayer && this.currentLayer) {
+            this.currentLayer.resetStyle(this.selectedLayer);
+        }
+        this.selectedFeature = null;
+        this.selectedLayer = null;
+    }
+
+    /**
      * Reset feature highlighting
      * @param {Object} layer - Leaflet layer
      */
     resetHighlight(layer) {
+        // Don't reset if this is the selected layer
+        if (this.selectedLayer && this.selectedLayer === layer) {
+            return;
+        }
+        
         if (this.currentLayer) {
             this.currentLayer.resetStyle(layer);
         }
@@ -278,6 +322,13 @@ class HistoricalMap {
      * @param {Object} layer - Leaflet layer
      */
     showTerritoryInfo(feature, layer) {
+        // Clear previous selection
+        this.clearSelection();
+        
+        // Set new selection
+        this.selectedFeature = feature;
+        this.selectedLayer = layer;
+        
         const properties = feature.properties;
         const nameField = properties.NAME || properties.name || properties.NAME_EN || 'Unknown Territory';
         
@@ -302,8 +353,8 @@ class HistoricalMap {
         // Show the panel
         this.showInfoPanel();
 
-        // Highlight the selected territory
-        this.highlightFeature(layer);
+        // Highlight the selected territory with selection style
+        this.selectFeature(layer);
     }
 
     /**
@@ -319,12 +370,8 @@ class HistoricalMap {
     hideInfoPanel() {
         document.getElementById('info-panel').classList.add('hidden');
         
-        // Reset any highlighted features
-        if (this.currentLayer) {
-            this.currentLayer.eachLayer((layer) => {
-                this.resetHighlight(layer);
-            });
-        }
+        // Clear selection when hiding panel
+        this.clearSelection();
     }
 
     /**
