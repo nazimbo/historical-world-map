@@ -1,16 +1,18 @@
 # Historical Interactive World Map
 
-An interactive web application that allows users to explore the changing political borders of nations and empires throughout history using a comprehensive time-selection slider spanning over 125,000 years.
+A modern, interactive web application that allows users to explore the changing political borders of nations and empires throughout history using a comprehensive time-selection slider spanning over 125,000 years.
 
 ## Features
 
-- **Interactive World Map**: Pan and zoom through historical territories
+- **Interactive World Map**: Pan and zoom through historical territories with smooth Leaflet.js integration
 - **Comprehensive Timeline**: Navigate through 52 historical periods (123,000 BC to 2010 AD)
-- **Territory Information**: Click on any territory to view details
-- **Smooth Transitions**: Visual transitions between time periods
-- **Responsive Design**: Works on desktop and mobile devices
+- **Territory Selection**: Click on any territory to view detailed information with persistent highlighting
+- **Modern UI**: Glass-morphism design with backdrop blur effects and gradient backgrounds
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices with touch-friendly controls
 - **Educational Focus**: Clear data attribution and historical context
-- **Prehistoric to Modern**: Complete timeline from Ice Age to contemporary era
+- **Feature Selection**: Territory selection with visual feedback and information panel
+- **Loading States**: Smooth loading indicators during data transitions
+- **Debounced Navigation**: Optimized performance with debounced slider interactions
 
 ## Quick Start
 
@@ -156,10 +158,13 @@ historical-world-map/
 
 ## Technology Stack
 
-- **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
-- **Mapping**: Leaflet.js v1.9.4
-- **Data Format**: GeoJSON
+- **Frontend**: Vanilla JavaScript (ES6+) with modern class-based architecture
+- **Mapping**: Leaflet.js v1.9.4 for interactive map rendering
+- **Styling**: CSS3 with advanced features (backdrop-filter, CSS Grid, flexbox)
+- **Data Format**: GeoJSON with comprehensive historical territory data
+- **Design**: Glass-morphism UI with responsive mobile-first design
 - **Hosting**: Any static web server (GitHub Pages, Netlify, etc.)
+- **Performance**: Debounced interactions, on-demand data loading
 
 ## Development
 
@@ -209,15 +214,18 @@ historical-world-map/
 
 ## Browser Support
 
-- **Modern Browsers**: Chrome, Firefox, Safari, Edge (latest versions)
-- **Mobile**: iOS Safari, Chrome Mobile
-- **Requirements**: ES6 support, Fetch API, CSS Grid/Flexbox
+- **Desktop**: Chrome, Firefox, Safari, Edge (latest versions)
+- **Mobile**: iOS Safari, Chrome Mobile with touch optimization
+- **Requirements**: ES6 support, Fetch API, CSS Grid/Flexbox, backdrop-filter support
+- **Progressive Enhancement**: Fallbacks for older browsers without backdrop-filter
 
 ## Performance Notes
 
-- GeoJSON files are loaded on-demand for each time period
-- Files should be < 3MB each for optimal performance
-- Consider implementing caching for production use
+- **On-demand Loading**: GeoJSON files are loaded dynamically for each time period
+- **Debounced Interactions**: Slider movements are debounced to prevent excessive API calls
+- **Optimized File Sizes**: Files are < 3MB each for optimal performance
+- **Responsive Design**: Mobile-first approach with optimized touch targets
+- **Memory Management**: Previous map layers are properly cleaned up on period changes
 
 ## Known Limitations
 
@@ -234,10 +242,18 @@ historical-world-map/
 4. Test thoroughly
 5. Submit a pull request
 
-## Future Enhancements
+## Current Features & Enhancements
 
+### Recently Implemented
+- ✅ Territory selection with persistent highlighting
+- ✅ Modern glass-morphism UI design
+- ✅ Responsive mobile-first design
+- ✅ Debounced slider interactions
+- ✅ Loading states and error handling
+- ✅ Clear selection functionality
+
+### Future Enhancements
 - [ ] Continuous timeline (not just discrete points)
-- [ ] More detailed regional data
 - [ ] Animation between time periods
 - [ ] Additional data sources integration
 - [ ] User preference persistence
@@ -245,6 +261,8 @@ historical-world-map/
 - [ ] Period bookmarking and favorites
 - [ ] Historical event annotations
 - [ ] Population and economic data overlays
+- [ ] Search functionality for territories
+- [ ] Comparison mode between periods
 
 ## License
 
@@ -259,7 +277,9 @@ For issues or questions:
 1. Check the browser console for error messages
 2. Verify all data files are present and correctly named
 3. Ensure you're running from a web server (not file://)
-4. Check that your browser supports required features
+4. Check that your browser supports required features (ES6, backdrop-filter)
+5. For mobile issues, ensure touch events are properly supported
+6. Clear browser cache if experiencing loading issues
 
 ## Acknowledgments
 
