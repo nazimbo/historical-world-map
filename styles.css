@@ -20,51 +20,51 @@ body {
     height: 100vh;
 }
 
-/* Header styles */
+/* Header styles - Minimalistic */
 header {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: white;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    position: relative;
-    z-index: 10;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 1000;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 header h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    letter-spacing: -0.02em;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    letter-spacing: -0.01em;
 }
 
 header p {
-    font-size: 0.95rem;
-    opacity: 0.95;
-    font-weight: 300;
-    max-width: 600px;
-    margin: 0 auto;
+    display: none;
 }
 
-/* Map container */
+/* Map container - Full focus */
 #map-container {
-    flex: 1;
-    position: relative;
-    margin: 1rem;
-    border-radius: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    border-radius: 0;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 #map {
     width: 100%;
     height: 100%;
-    border-radius: 20px;
+    border-radius: 0;
 }
 
 /* Loading indicator */
@@ -104,19 +104,21 @@ header p {
     display: none;
 }
 
-/* Time controls */
+/* Time controls - Minimalistic overlay */
 #time-controls {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-bottom: none;
-    border-left: none;
-    border-right: none;
-    padding: 0.75rem 1.5rem;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
-    margin: 0 1rem;
-    border-radius: 20px 20px 0 0;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    z-index: 1000;
+    min-width: 320px;
+    max-width: 500px;
 }
 
 .slider-container {
@@ -125,12 +127,7 @@ header p {
 }
 
 .slider-container label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 1rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 1.1rem;
-    text-align: center;
+    display: none;
 }
 
 #time-slider {
@@ -173,24 +170,15 @@ header p {
 }
 
 .slider-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 1rem;
-    font-weight: 300;
+    display: none;
 }
 
 #current-period {
     text-align: center;
-    font-size: 1.3rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 500;
     color: white;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
+    margin-top: 0.75rem;
     letter-spacing: 0.5px;
 }
 
@@ -252,17 +240,20 @@ header p {
     color: rgba(255, 255, 255, 0.9);
 }
 
-/* Footer */
+/* Footer - Minimalistic */
 footer {
-    background: rgba(255, 255, 255, 0.05);
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.8);
-    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 0.75rem;
     text-align: center;
-    font-size: 0.8rem;
-    margin: 0 1rem;
-    border-radius: 0 0 20px 20px;
+    font-size: 0.7rem;
+    border-radius: 8px;
+    z-index: 1000;
 }
 
 footer a {
@@ -278,147 +269,88 @@ footer a:hover {
 }
 
 footer p {
-    margin-bottom: 0.5rem;
+    margin: 0;
+    line-height: 1.3;
 }
 
 footer p:last-child {
-    margin-bottom: 0;
+    display: none;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-    body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
     header {
-        padding: 1.5rem 1rem;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        padding: 0.5rem 0.75rem;
     }
     
     header h1 {
-        font-size: 2rem;
-    }
-    
-    header p {
-        font-size: 1rem;
-    }
-    
-    #map-container {
-        margin: 0.5rem;
-        border-radius: 16px;
-    }
-    
-    #map {
-        border-radius: 16px;
+        font-size: 1.1rem;
     }
     
     #time-controls {
-        padding: 1.5rem 1rem;
-        margin: 0 0.5rem;
-        border-radius: 16px 16px 0 0;
-    }
-    
-    .slider-labels {
-        font-size: 0.75rem;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        transform: none;
+        min-width: auto;
+        max-width: none;
+        padding: 0.75rem 1rem;
     }
     
     #current-period {
-        font-size: 1.1rem;
-        padding: 0.65rem 1.25rem;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
     }
     
     #info-panel {
-        width: calc(100% - 40px);
-        max-width: 300px;
-        border-radius: 12px;
-    }
-    
-    .info-header {
-        border-radius: 12px 12px 0 0;
-        padding: 1rem;
-    }
-    
-    .info-content {
-        padding: 1rem;
+        width: calc(100% - 20px);
+        max-width: none;
+        left: 10px;
+        right: 10px;
+        top: 60px;
     }
     
     footer {
-        font-size: 0.85rem;
-        padding: 1.25rem;
-        margin: 0 0.5rem;
-        border-radius: 0 0 16px 16px;
+        display: none;
     }
 }
 
 @media (max-width: 480px) {
     header h1 {
-        font-size: 1.75rem;
-    }
-    
-    #map-container {
-        margin: 0.25rem;
-        border-radius: 12px;
-    }
-    
-    #map {
-        border-radius: 12px;
+        font-size: 1rem;
     }
     
     #time-controls {
-        margin: 0 0.25rem;
-        border-radius: 12px 12px 0 0;
-        padding: 1.25rem 0.75rem;
-    }
-    
-    .slider-labels {
-        font-size: 0.7rem;
-    }
-    
-    .slider-labels span:nth-child(2n) {
-        display: none;
+        bottom: 5px;
+        left: 5px;
+        right: 5px;
+        padding: 0.6rem 0.8rem;
+        border-radius: 12px;
     }
     
     #current-period {
-        font-size: 1rem;
-        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        margin-top: 0.4rem;
     }
     
     #info-panel {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        width: auto;
-        border-radius: 10px;
-    }
-    
-    .info-header {
-        border-radius: 10px 10px 0 0;
-    }
-    
-    footer {
-        margin: 0 0.25rem;
-        border-radius: 0 0 12px 12px;
+        top: 50px;
+        left: 5px;
+        right: 5px;
+        border-radius: 8px;
     }
 }
 
 @media (max-width: 360px) {
     header h1 {
-        font-size: 1.5rem;
-    }
-    
-    header p {
         font-size: 0.9rem;
     }
     
-    .slider-labels span:nth-child(3n) {
-        display: none;
-    }
-    .slider-labels span:nth-child(2n) {
-        display: inline;
-    }
-    
     #current-period {
-        font-size: 0.95rem;
+        font-size: 0.8rem;
     }
 }
 
