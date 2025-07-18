@@ -62,12 +62,14 @@ class HistoricalMap {
             { year: 2010, file: 'world_2010.geojson', label: '2010 AD' }
         ];
 
-        this.currentPeriodIndex = 0;
+        this.currentPeriodIndex = 8; // Start at 1000 BC (more interesting than 123000 BC)
         this.currentLayer = null;
         this.map = null;
         this.isLoading = false;
-        this.selectedFeature = null; // Track selected feature
-        this.selectedLayer = null;   // Track selected layer
+        this.selectedFeature = null;
+        this.selectedLayer = null;
+        this.errorNotification = null;
+        this.debounceTimeout = null; // Track timeout for cleanup
 
         // Initialize the application
         this.init();
@@ -80,9 +82,51 @@ class HistoricalMap {
         this.initMap();
         this.initSlider();
         this.initInfoPanel();
+        this.initKeyboardControls();
         
-        // Load the initial period
-        this.loadPeriod(0);
+        // Load the initial period (1000 BC)
+        this.loadPeriod(this.currentPeriodIndex);
+    }
+
+    /**
+     * Initialize keyboard controls for accessibility
+     */
+    initKeyboardControls() {
+        document.addEventListener('keydown', (e) => {
+            // Only handle if not typing in an input
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch(e.key) {
+                case 'Escape':
+                    if (!document.getElementById('info-panel').classList.contains('hidden')) {
+                        this.hideInfoPanel();
+                        e.preventDefault();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (this.currentPeriodIndex > 0) {
+                        this.navigateToPeriod(this.currentPeriodIndex - 1);
+                        e.preventDefault();
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (this.currentPeriodIndex < this.periods.length - 1) {
+                        this.navigateToPeriod(this.currentPeriodIndex + 1);
+                        e.preventDefault();
+                    }
+                    break;
+            }
+        });
+    }
+
+    /**
+     * Navigate to a specific period and update UI
+     */
+    navigateToPeriod(periodIndex) {
+        this.currentPeriodIndex = periodIndex;
+        document.getElementById('time-slider').value = periodIndex;
+        document.getElementById('current-period').textContent = this.periods[periodIndex].label;
+        this.debouncedLoadPeriod(periodIndex);
     }
 
     /**
@@ -97,16 +141,19 @@ class HistoricalMap {
 
         // Create map centered on the world
         this.map = L.map('map', {
-            center: [20, 0], // Centered on equator
+            center: [20, 0],
             zoom: 2,
             minZoom: 1,
             maxZoom: 8,
-            worldCopyJump: false, // Disable world copy jump for bounded map
-            maxBounds: worldBounds, // Set maximum bounds
-            maxBoundsViscosity: 1.0 // Make bounds completely solid
+            worldCopyJump: false,
+            maxBounds: worldBounds,
+            maxBoundsViscosity: 1.0,
+            // Accessibility improvements
+            keyboard: true,
+            keyboardPanDelta: 80
         });
 
-        // Add base tile layer (light background for historical data)
+        // Add base tile layer
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -126,14 +173,22 @@ class HistoricalMap {
         const slider = document.getElementById('time-slider');
         const currentPeriodDisplay = document.getElementById('current-period');
 
-        // Set initial display
-        currentPeriodDisplay.textContent = this.periods[0].label;
+        // Set initial values
+        slider.value = this.currentPeriodIndex;
+        currentPeriodDisplay.textContent = this.periods[this.currentPeriodIndex].label;
+
+        // Add ARIA labels for accessibility
+        slider.setAttribute('aria-label', 'Historical time period selector');
+        slider.setAttribute('aria-valuetext', this.periods[this.currentPeriodIndex].label);
 
         // Handle slider changes
         slider.addEventListener('input', (e) => {
             const periodIndex = parseInt(e.target.value);
             this.currentPeriodIndex = periodIndex;
-            currentPeriodDisplay.textContent = this.periods[periodIndex].label;
+            const periodLabel = this.periods[periodIndex].label;
+            
+            currentPeriodDisplay.textContent = periodLabel;
+            slider.setAttribute('aria-valuetext', periodLabel);
             
             // Load new period with debouncing
             this.debouncedLoadPeriod(periodIndex);
@@ -145,6 +200,13 @@ class HistoricalMap {
      */
     initInfoPanel() {
         const closeButton = document.getElementById('close-info');
+        const infoPanel = document.getElementById('info-panel');
+        
+        // Add ARIA labels
+        closeButton.setAttribute('aria-label', 'Close territory information panel');
+        infoPanel.setAttribute('role', 'dialog');
+        infoPanel.setAttribute('aria-live', 'polite');
+        
         closeButton.addEventListener('click', () => {
             this.hideInfoPanel();
         });
@@ -159,32 +221,38 @@ class HistoricalMap {
 
     /**
      * Load and display a specific historical period
-     * @param {number} periodIndex - Index of the period to load
      */
     async loadPeriod(periodIndex) {
         if (this.isLoading) return;
         
         this.isLoading = true;
         this.showLoading();
+        this.hideErrorNotification();
 
         try {
             const period = this.periods[periodIndex];
-
-            // Fetch GeoJSON data
             const response = await fetch(`data/${period.file}`);
             
             if (!response.ok) {
-                throw new Error(`Failed to load ${period.file}: ${response.status} ${response.statusText}`);
+                if (response.status === 404) {
+                    throw new Error(`Data file not found: ${period.file}. Please ensure the data directory contains all required GeoJSON files.`);
+                } else {
+                    throw new Error(`Failed to load ${period.file}: ${response.status} ${response.statusText}`);
+                }
             }
 
             const geoJsonData = await response.json();
             
-            // Update the map
+            // Validate GeoJSON structure
+            if (!geoJsonData.type || !geoJsonData.features) {
+                throw new Error(`Invalid GeoJSON format in ${period.file}`);
+            }
+            
             this.updateMap(geoJsonData, period);
             
         } catch (error) {
             console.error('Error loading period:', error);
-            this.showError(`Failed to load historical data for ${this.periods[periodIndex].label}. ${error.message}`);
+            this.showErrorNotification(error.message, period);
         } finally {
             this.isLoading = false;
             this.hideLoading();
@@ -192,20 +260,64 @@ class HistoricalMap {
     }
 
     /**
+     * Show error notification with retry option
+     */
+    showErrorNotification(message, period) {
+        // Remove existing notification
+        this.hideErrorNotification();
+        
+        const notification = document.createElement('div');
+        notification.className = 'error-notification backdrop-blur-20';
+        notification.innerHTML = `
+            <div class="error-content">
+                <h4>⚠️ Unable to Load Historical Data</h4>
+                <p>${message}</p>
+                <div class="error-actions">
+                    <button id="retry-btn" class="retry-button">Retry</button>
+                    <button id="dismiss-btn" class="dismiss-button">Dismiss</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        this.errorNotification = notification;
+        
+        // Add event listeners
+        document.getElementById('retry-btn').addEventListener('click', () => {
+            this.hideErrorNotification();
+            this.loadPeriod(this.currentPeriodIndex);
+        });
+        
+        document.getElementById('dismiss-btn').addEventListener('click', () => {
+            this.hideErrorNotification();
+        });
+        
+        // Auto-dismiss after 10 seconds
+        setTimeout(() => {
+            this.hideErrorNotification();
+        }, 10000);
+    }
+
+    /**
+     * Hide error notification
+     */
+    hideErrorNotification() {
+        if (this.errorNotification) {
+            this.errorNotification.remove();
+            this.errorNotification = null;
+        }
+    }
+
+    /**
      * Update the map with new GeoJSON data
-     * @param {Object} geoJsonData - GeoJSON data to display
-     * @param {Object} period - Period information
      */
     updateMap(geoJsonData, period) {
-        // Clear any existing selection
         this.clearSelection();
         
-        // Remove previous layer with fade out effect
         if (this.currentLayer) {
             this.map.removeLayer(this.currentLayer);
         }
 
-        // Hide info panel when switching periods
         this.hideInfoPanel();
 
         // Create new layer with styling and interactions
@@ -220,32 +332,32 @@ class HistoricalMap {
 
                 // Add hover effects
                 layer.on('mouseover', (e) => {
-                    // Only highlight if not already selected
                     if (this.selectedLayer !== e.target) {
                         this.highlightFeature(e.target);
                     }
                 });
 
                 layer.on('mouseout', (e) => {
-                    // Only reset if not the selected layer
                     if (this.selectedLayer !== e.target) {
                         this.resetHighlight(e.target);
                     }
                 });
+
+                // Add keyboard support for features
+                layer.getElement()?.setAttribute('tabindex', '0');
+                layer.getElement()?.setAttribute('role', 'button');
+                layer.getElement()?.setAttribute('aria-label', 
+                    `Territory: ${feature.properties.NAME || feature.properties.name || 'Unknown'}`);
             }
         });
 
-        // Add layer to map with fade in effect
         this.currentLayer.addTo(this.map);
     }
 
     /**
      * Get styling for map features
-     * @param {Object} feature - GeoJSON feature
-     * @returns {Object} - Leaflet style object
      */
     getFeatureStyle(feature) {
-        // Check if territory has meaningful data
         const hasData = this.hasValidData(feature);
         
         return {
@@ -261,18 +373,14 @@ class HistoricalMap {
     
     /**
      * Check if a territory has valid data
-     * @param {Object} feature - GeoJSON feature
-     * @returns {boolean} - True if has valid data
      */
     hasValidData(feature) {
         const props = feature.properties;
         if (!props) return false;
         
-        // Check if NAME field exists and is not null/empty
         const name = props.NAME || props.name;
         if (!name || name.trim() === '') return false;
         
-        // Check if other key fields are not null
         const keyFields = Object.keys(props).filter(key => 
             key !== 'NAME' && key !== 'name' && props[key] !== null
         );
@@ -282,7 +390,6 @@ class HistoricalMap {
 
     /**
      * Highlight a feature on hover
-     * @param {Object} layer - Leaflet layer
      */
     highlightFeature(layer) {
         layer.setStyle({
@@ -300,7 +407,6 @@ class HistoricalMap {
 
     /**
      * Select a feature (persistent highlight)
-     * @param {Object} layer - Leaflet layer
      */
     selectFeature(layer) {
         layer.setStyle({
@@ -330,10 +436,8 @@ class HistoricalMap {
 
     /**
      * Reset feature highlighting
-     * @param {Object} layer - Leaflet layer
      */
     resetHighlight(layer) {
-        // Don't reset if this is the selected layer
         if (this.selectedLayer && this.selectedLayer === layer) {
             return;
         }
@@ -345,42 +449,34 @@ class HistoricalMap {
 
     /**
      * Show territory information in the info panel
-     * @param {Object} feature - GeoJSON feature
-     * @param {Object} layer - Leaflet layer
      */
     showTerritoryInfo(feature, layer) {
-        // Clear previous selection
         this.clearSelection();
         
-        // Set new selection
         this.selectedFeature = feature;
         this.selectedLayer = layer;
         
         const properties = feature.properties;
         const nameField = properties.NAME || properties.name || properties.NAME_EN || 'Unknown Territory';
         
-        // Update info panel content
         document.getElementById('territory-name').textContent = nameField;
         
         let detailsHTML = `<strong>Territory:</strong> ${nameField}<br>`;
         
-        // Add any additional properties
-        if (properties.TYPE) {
-            detailsHTML += `<strong>Type:</strong> ${properties.TYPE}<br>`;
-        }
-        if (properties.YEAR) {
-            detailsHTML += `<strong>Year:</strong> ${properties.YEAR}<br>`;
-        }
+        // Add additional properties if available
+        Object.keys(properties).forEach(key => {
+            if (key !== 'NAME' && key !== 'name' && properties[key] !== null && properties[key] !== '') {
+                const value = properties[key];
+                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                detailsHTML += `<strong>${displayKey}:</strong> ${value}<br>`;
+            }
+        });
         
-        // Add current period context
         detailsHTML += `<strong>Period:</strong> ${this.periods[this.currentPeriodIndex].label}<br>`;
         
         document.getElementById('territory-details').innerHTML = detailsHTML;
         
-        // Show the panel
         this.showInfoPanel();
-
-        // Highlight the selected territory with selection style
         this.selectFeature(layer);
     }
 
@@ -388,7 +484,12 @@ class HistoricalMap {
      * Show the info panel
      */
     showInfoPanel() {
-        document.getElementById('info-panel').classList.remove('hidden');
+        const panel = document.getElementById('info-panel');
+        panel.classList.remove('hidden');
+        
+        // Focus management for accessibility
+        const closeButton = document.getElementById('close-info');
+        setTimeout(() => closeButton.focus(), 100);
     }
 
     /**
@@ -396,8 +497,6 @@ class HistoricalMap {
      */
     hideInfoPanel() {
         document.getElementById('info-panel').classList.add('hidden');
-        
-        // Clear selection when hiding panel
         this.clearSelection();
     }
 
@@ -416,49 +515,49 @@ class HistoricalMap {
     }
 
     /**
-     * Show error message
-     * @param {string} message - Error message to display
+     * Cleanup method for proper disposal
      */
-    showError(message) {
-        // For now, just log and alert - in production would use a proper notification system
-        console.error(message);
-        alert(`Error: ${message}`);
+    destroy() {
+        if (this.debounceTimeout) {
+            clearTimeout(this.debounceTimeout);
+        }
+        this.hideErrorNotification();
+        if (this.map) {
+            this.map.remove();
+        }
     }
 
     /**
      * Utility function for debouncing
-     * @param {Function} func - Function to debounce
-     * @param {number} wait - Wait time in milliseconds
-     * @returns {Function} - Debounced function
      */
     debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
+        return (...args) => {
+            if (this.debounceTimeout) {
+                clearTimeout(this.debounceTimeout);
+            }
+            this.debounceTimeout = setTimeout(() => func.apply(this, args), wait);
         };
     }
 }
 
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Check if required elements exist
     if (!document.getElementById('map')) {
         console.error('Map container not found!');
         return;
     }
 
-    // Create the application instance
     window.historicalMap = new HistoricalMap();
-    
 });
 
-// Handle any global errors
+// Handle page unload for cleanup
+window.addEventListener('beforeunload', () => {
+    if (window.historicalMap) {
+        window.historicalMap.destroy();
+    }
+});
+
+// Handle global errors
 window.addEventListener('error', (e) => {
     console.error('Global error:', e.error);
 });

@@ -10,14 +10,15 @@ A modern, interactive web application that allows users to explore the changing 
 - **Modern UI**: Glass-morphism design with backdrop blur effects and gradient backgrounds
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices with touch-friendly controls
 - **Educational Focus**: Clear data attribution and historical context
-- **Feature Selection**: Territory selection with visual feedback and information panel
+- **Accessibility**: Keyboard navigation, screen reader support, and focus management
+- **Error Handling**: Graceful handling of missing data files with retry options
 - **Loading States**: Smooth loading indicators during data transitions
 - **Debounced Navigation**: Optimized performance with debounced slider interactions
 
 ## Quick Start
 
 1. **Clone or download** this repository
-2. **Add GeoJSON data files** to the `data/` directory (see Data Setup below)
+2. **Set up a local web server** (required for loading GeoJSON files)
 3. **Open `index.html`** in a web browser
 4. **Explore history** using the time slider!
 
@@ -25,7 +26,7 @@ A modern, interactive web application that allows users to explore the changing 
 
 This application utilizes comprehensive historical GeoJSON data files from the [Historical Basemaps](https://github.com/aourednik/historical-basemaps) repository, covering 52 time periods from 123,000 BC to 2010 AD.
 
-### Complete Data Files Available
+### Complete Data Files Included
 
 The app now includes all 52 historical periods:
 
@@ -88,71 +89,23 @@ The app now includes all 52 historical periods:
 - `world_2000.geojson` (2,000 AD) - Millennium
 - `world_2010.geojson` (2,010 AD) - Modern era
 
-### Getting the Data
+### Data Attribution
 
-The application is configured to use all 52 available historical periods from the Historical Basemaps dataset. All files listed above are already available in your `/data` directory and configured in the application.
+The application utilizes all 52 available historical periods from the Historical Basemaps dataset. All files listed above are already included in your `/data` directory and configured in the application.
 
 ## Project Structure
 
 ```
 historical-world-map/
 ├── index.html          # Main application page
-├── app.js             # Core application logic
-├── styles.css         # Styling and layout
+├── app.js             # Core application logic with enhanced features
+├── styles.css         # Styling with modern glass-morphism design
 ├── README.md          # This file
-└── data/              # Historical GeoJSON data (52 files)
+├── .gitignore         # Git ignore file
+└── data/              # Historical GeoJSON data (52 files included)
     ├── world_bc123000.geojson # 123,000 BC - Prehistoric
     ├── world_bc10000.geojson  # 10,000 BC - End of Ice Age
-    ├── world_bc8000.geojson   # 8,000 BC - Neolithic
-    ├── world_bc5000.geojson   # 5,000 BC - Bronze Age
-    ├── world_bc4000.geojson   # 4,000 BC - Early civilizations
-    ├── world_bc3000.geojson   # 3,000 BC - Ancient Egypt
-    ├── world_bc2000.geojson   # 2,000 BC - Middle Bronze Age
-    ├── world_bc1500.geojson   # 1,500 BC - Late Bronze Age
-    ├── world_bc1000.geojson   # 1,000 BC - Iron Age
-    ├── world_bc700.geojson    # 700 BC - Archaic period
-    ├── world_bc500.geojson    # 500 BC - Classical Antiquity
-    ├── world_bc400.geojson    # 400 BC - Greek Golden Age
-    ├── world_bc323.geojson    # 323 BC - Death of Alexander
-    ├── world_bc300.geojson    # 300 BC - Hellenistic
-    ├── world_bc200.geojson    # 200 BC - Roman expansion
-    ├── world_bc100.geojson    # 100 BC - Late Republic
-    ├── world_bc1.geojson      # 1 BC - End of BC era
-    ├── world_100.geojson      # 100 AD - Roman Empire peak
-    ├── world_200.geojson      # 200 AD - Pax Romana
-    ├── world_300.geojson      # 300 AD - Late Roman Empire
-    ├── world_400.geojson      # 400 AD - Fall of Rome
-    ├── world_500.geojson      # 500 AD - Late antiquity
-    ├── world_600.geojson      # 600 AD - Early Medieval
-    ├── world_700.geojson      # 700 AD - Islamic expansion
-    ├── world_800.geojson      # 800 AD - Charlemagne
-    ├── world_900.geojson      # 900 AD - Viking Age
-    ├── world_1000.geojson     # 1,000 AD - Medieval
-    ├── world_1100.geojson     # 1,100 AD - Crusades
-    ├── world_1200.geojson     # 1,200 AD - High Middle Ages
-    ├── world_1279.geojson     # 1,279 AD - Mongol Empire
-    ├── world_1300.geojson     # 1,300 AD - Late Medieval
-    ├── world_1400.geojson     # 1,400 AD - Renaissance
-    ├── world_1492.geojson     # 1,492 AD - Columbus
-    ├── world_1500.geojson     # 1,500 AD - Age of Exploration
-    ├── world_1530.geojson     # 1,530 AD - Early Renaissance
-    ├── world_1600.geojson     # 1,600 AD - Colonial expansion
-    ├── world_1650.geojson     # 1,650 AD - Post-Westphalia
-    ├── world_1700.geojson     # 1,700 AD - Enlightenment
-    ├── world_1715.geojson     # 1,715 AD - Spanish Succession
-    ├── world_1783.geojson     # 1,783 AD - American Independence
-    ├── world_1800.geojson     # 1,800 AD - Napoleonic era
-    ├── world_1815.geojson     # 1,815 AD - Post-Napoleonic
-    ├── world_1880.geojson     # 1,880 AD - Industrial Age
-    ├── world_1900.geojson     # 1,900 AD - Imperial peak
-    ├── world_1914.geojson     # 1,914 AD - WWI begins
-    ├── world_1920.geojson     # 1,920 AD - Post-WWI
-    ├── world_1930.geojson     # 1,930 AD - Great Depression
-    ├── world_1938.geojson     # 1,938 AD - Pre-WWII
-    ├── world_1945.geojson     # 1,945 AD - WWII ends
-    ├── world_1960.geojson     # 1,960 AD - Cold War
-    ├── world_1994.geojson     # 1,994 AD - Post-Cold War
-    ├── world_2000.geojson     # 2,000 AD - Millennium
+    ├── ...                    # (all 52 files as listed above)
     └── world_2010.geojson     # 2,010 AD - Modern era
 ```
 
@@ -165,24 +118,38 @@ historical-world-map/
 - **Design**: Glass-morphism UI with responsive mobile-first design
 - **Hosting**: Any static web server (GitHub Pages, Netlify, etc.)
 - **Performance**: Debounced interactions, on-demand data loading
+- **Accessibility**: ARIA labels, keyboard navigation, focus management
 
 ## Development
 
 ### Local Development
 
-1. Start a local web server (required for loading GeoJSON files):
-   ```bash
-   # Python 3
-   python -m http.server 8000
-   
-   # Node.js (if you have it)
-   npx serve .
-   
-   # PHP
-   php -S localhost:8000
-   ```
+**Important:** You must serve the files from a web server (not open index.html directly) due to CORS restrictions when loading GeoJSON files.
 
-2. Open `http://localhost:8000` in your browser
+```bash
+# Python 3
+python -m http.server 8000
+
+# Node.js (if you have it)
+npx serve .
+
+# PHP
+php -S localhost:8000
+
+# VS Code Live Server extension
+# Install the extension and right-click index.html → "Open with Live Server"
+```
+
+Then open `http://localhost:8000` in your browser.
+
+### Controls
+
+- **Slider**: Drag to navigate through time periods
+- **Arrow Keys**: Navigate previous/next time periods
+- **Click Map**: Select territories for detailed information
+- **Escape Key**: Close territory information panel
+- **Zoom**: Mouse wheel or zoom controls
+- **Pan**: Click and drag map
 
 ### Adding New Time Periods
 
@@ -191,13 +158,7 @@ historical-world-map/
    ```javascript
    { year: YOUR_YEAR, file: 'your_file.geojson', label: 'Your Label' }
    ```
-3. Update the slider `max` value (currently 51 for 52 periods) and add labels in `index.html`
-
-### Customizing Styling
-
-- **Colors**: Edit CSS custom properties in `styles.css`
-- **Map Style**: Modify `getFeatureStyle()` function in `app.js`
-- **Layout**: Update CSS grid/flexbox properties
+3. Update the slider `max` value and add labels in `index.html`
 
 ## Data Sources & Attribution
 
@@ -216,70 +177,115 @@ historical-world-map/
 
 - **Desktop**: Chrome, Firefox, Safari, Edge (latest versions)
 - **Mobile**: iOS Safari, Chrome Mobile with touch optimization
-- **Requirements**: ES6 support, Fetch API, CSS Grid/Flexbox, backdrop-filter support
+- **Requirements**: ES6 support, Fetch API, CSS Grid/Flexbox
 - **Progressive Enhancement**: Fallbacks for older browsers without backdrop-filter
+
+## Accessibility Features
+
+- **Keyboard Navigation**: Arrow keys for time navigation, Escape to close panels
+- **Screen Reader Support**: ARIA labels and semantic HTML
+- **Focus Management**: Clear focus indicators and logical tab order
+- **High Contrast**: Visible focus indicators and sufficient color contrast
+- **Touch Friendly**: Large touch targets on mobile devices
+
+## Error Handling
+
+The application includes comprehensive error handling:
+
+- **Missing Files**: Clear error messages with retry options
+- **Network Issues**: Graceful degradation and user feedback
+- **Invalid Data**: Validation of GeoJSON structure
+- **Browser Compatibility**: Fallbacks for unsupported features
 
 ## Performance Notes
 
 - **On-demand Loading**: GeoJSON files are loaded dynamically for each time period
-- **Debounced Interactions**: Slider movements are debounced to prevent excessive API calls
-- **Optimized File Sizes**: Files are < 3MB each for optimal performance
+- **Debounced Interactions**: Slider movements are debounced to prevent excessive requests
+- **Memory Management**: Previous map layers are properly cleaned up
 - **Responsive Design**: Mobile-first approach with optimized touch targets
-- **Memory Management**: Previous map layers are properly cleaned up on period changes
+- **File Sizes**: Keep individual GeoJSON files under 3MB for optimal performance
 
 ## Known Limitations
 
 - **Data Accuracy**: Simplified for world-scale display
+- **File Size**: Large data files may impact initial loading performance
+- **Browser Support**: Advanced visual effects require modern browsers
 - **Temporal Precision**: Discrete time points, not continuous timeline
-- **Regional Detail**: Optimized for continental/world view
+- **Regional Detail**: Optimized for continental/world view rather than local detail
 - **Modern Conflicts**: Disputed territories shown as de facto control
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Map not loading**
+   - Check browser console for JavaScript errors
+   - Ensure you have an internet connection for the base map tiles
+   - Verify Leaflet.js is loading correctly from the CDN
+   - Make sure you're running from a web server, not opening the file directly
+
+2. **Slow loading**
+   - Large GeoJSON files may take time to load initially
+   - Check your internet connection
+   - Clear browser cache if experiencing persistent issues
+
+3. **Mobile performance issues**
+   - Reduce visual effects if experiencing lag on older devices
+   - Check that touch events are working properly
+   - Ensure sufficient memory available on mobile device
+
+4. **Slider not responding**
+   - Ensure JavaScript is enabled in your browser
+   - Check for any JavaScript console errors
+   - Verify you're using a modern browser with ES6 support
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
+3. Test thoroughly with various data files
+4. Ensure accessibility standards are maintained
 5. Submit a pull request
 
-## Current Features & Enhancements
+## Current Features
 
-### Recently Implemented
-- ✅ Territory selection with persistent highlighting
-- ✅ Modern glass-morphism UI design
-- ✅ Responsive mobile-first design
-- ✅ Debounced slider interactions
-- ✅ Loading states and error handling
-- ✅ Clear selection functionality
+### ✅ Implemented
+- Complete 52-period timeline support
+- Territory selection with persistent highlighting
+- Modern glass-morphism UI design
+- Responsive mobile-first design
+- Keyboard navigation and accessibility
+- Error handling with retry functionality
+- Loading states and user feedback
+- Debounced slider interactions
 
-### Future Enhancements
-- [ ] Continuous timeline (not just discrete points)
-- [ ] Animation between time periods
-- [ ] Additional data sources integration
-- [ ] User preference persistence
-- [ ] Export functionality
-- [ ] Period bookmarking and favorites
-- [ ] Historical event annotations
+### 🔄 Future Enhancements
+- [ ] Continuous timeline animation between periods
+- [ ] Historical event annotations and markers
 - [ ] Population and economic data overlays
-- [ ] Search functionality for territories
-- [ ] Comparison mode between periods
+- [ ] Search functionality for territories and time periods
+- [ ] Comparison mode between different periods
+- [ ] Export functionality for maps and data
+- [ ] Offline support with cached data
+- [ ] Custom time period creation
+- [ ] Advanced filtering options
 
 ## License
 
 This project is open source. Please check individual data source licenses:
 - Historical Basemaps: Check repository for specific licensing
 - Leaflet.js: BSD 2-Clause License
-- Application code: MIT License (modify as needed)
+- Application code: MIT License
 
 ## Support
 
 For issues or questions:
-1. Check the browser console for error messages
-2. Verify all data files are present and correctly named
-3. Ensure you're running from a web server (not file://)
-4. Check that your browser supports required features (ES6, backdrop-filter)
-5. For mobile issues, ensure touch events are properly supported
-6. Clear browser cache if experiencing loading issues
+
+1. **Loading Issues**: Ensure you're running from a web server (not file://)
+2. **JavaScript Errors**: Check the browser console for detailed error messages  
+3. **Performance**: Try reducing visual effects or clearing browser cache
+4. **Mobile Problems**: Check that touch events are supported
+5. **Browser Compatibility**: Ensure you're using a modern browser with ES6 support
 
 ## Acknowledgments
 
