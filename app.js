@@ -169,7 +169,6 @@ class HistoricalMap {
 
         try {
             const period = this.periods[periodIndex];
-            console.log(`Loading period: ${period.label}`);
 
             // Fetch GeoJSON data
             const response = await fetch(`data/${period.file}`);
@@ -211,7 +210,7 @@ class HistoricalMap {
 
         // Create new layer with styling and interactions
         this.currentLayer = L.geoJSON(geoJsonData, {
-            style: this.getFeatureStyle,
+            style: (feature) => this.getFeatureStyle(feature),
             onEachFeature: (feature, layer) => {
                 // Add click handler for territory info
                 layer.on('click', (e) => {
@@ -238,8 +237,6 @@ class HistoricalMap {
 
         // Add layer to map with fade in effect
         this.currentLayer.addTo(this.map);
-
-        console.log(`Loaded ${geoJsonData.features.length} territories for ${period.label}`);
     }
 
     /**
@@ -248,13 +245,39 @@ class HistoricalMap {
      * @returns {Object} - Leaflet style object
      */
     getFeatureStyle(feature) {
+        // Check if territory has meaningful data
+        const hasData = this.hasValidData(feature);
+        
         return {
-            fillColor: '#3498db',
-            weight: 1,
-            opacity: 0.8,
-            color: '#2c3e50',
-            fillOpacity: 0.6
+            fillColor: hasData ? '#3498db' : '#95a5a6',
+            weight: 1.5,
+            opacity: 0.9,
+            color: 'rgba(255, 255, 255, 0.8)',
+            fillOpacity: hasData ? 0.7 : 0.4,
+            dashArray: null,
+            className: 'territory-feature'
         };
+    }
+    
+    /**
+     * Check if a territory has valid data
+     * @param {Object} feature - GeoJSON feature
+     * @returns {boolean} - True if has valid data
+     */
+    hasValidData(feature) {
+        const props = feature.properties;
+        if (!props) return false;
+        
+        // Check if NAME field exists and is not null/empty
+        const name = props.NAME || props.name;
+        if (!name || name.trim() === '') return false;
+        
+        // Check if other key fields are not null
+        const keyFields = Object.keys(props).filter(key => 
+            key !== 'NAME' && key !== 'name' && props[key] !== null
+        );
+        
+        return keyFields.length > 0;
     }
 
     /**
@@ -264,8 +287,10 @@ class HistoricalMap {
     highlightFeature(layer) {
         layer.setStyle({
             weight: 3,
-            color: '#e74c3c',
-            fillOpacity: 0.8
+            color: 'rgba(255, 255, 255, 1)',
+            fillOpacity: 0.9,
+            dashArray: '5, 5',
+            className: 'territory-feature territory-hover'
         });
         
         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
@@ -280,9 +305,11 @@ class HistoricalMap {
     selectFeature(layer) {
         layer.setStyle({
             weight: 4,
-            color: '#f39c12',
-            fillColor: '#f39c12',
-            fillOpacity: 0.9
+            color: 'rgba(255, 255, 255, 1)',
+            fillColor: 'rgba(255, 215, 0, 0.8)',
+            fillOpacity: 0.9,
+            dashArray: null,
+            className: 'territory-feature territory-selected'
         });
         
         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
@@ -419,7 +446,6 @@ class HistoricalMap {
 
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Initializing Historical Interactive World Map...');
     
     // Check if required elements exist
     if (!document.getElementById('map')) {
@@ -430,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create the application instance
     window.historicalMap = new HistoricalMap();
     
-    console.log('Historical Map initialized successfully');
 });
 
 // Handle any global errors
