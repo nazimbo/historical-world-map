@@ -869,10 +869,12 @@ footer p {
     body {
         -webkit-touch-callout: none;
         -webkit-user-select: none;
+        user-select: none;
         -webkit-tap-highlight-color: transparent;
     }
     
     #time-slider {
+        appearance: none;
         -webkit-appearance: none;
     }
     
