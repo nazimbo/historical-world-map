@@ -1,5 +1,5 @@
 /**
- * Historical Interactive World Map
+ * Historical Interactive World Map - Enhanced with Smart Caching
  * Core application logic for displaying changing political borders throughout history
  */
 
@@ -62,14 +62,28 @@ class HistoricalMap {
             { year: 2010, file: 'world_2010.geojson', label: '2010 AD' }
         ];
 
-        this.currentPeriodIndex = 8; // Start at 1000 BC (more interesting than 123000 BC)
+        this.currentPeriodIndex = 8; // Start at 1000 BC
         this.currentLayer = null;
         this.map = null;
         this.isLoading = false;
         this.selectedFeature = null;
         this.selectedLayer = null;
         this.errorNotification = null;
-        this.debounceTimeout = null; // Track timeout for cleanup
+        this.debounceTimeout = null;
+
+        // CRITICAL ADDITION: Smart caching system
+        this.dataCache = new Map();
+        this.maxCacheSize = 15; // Cache up to 15 periods
+        this.cacheStats = {
+            hits: 0,
+            misses: 0,
+            totalBytesLoaded: 0,
+            totalLoadTime: 0
+        };
+
+        // Preloading queue for smooth transitions
+        this.preloadQueue = new Set();
+        this.isPreloading = false;
 
         // Initialize the application
         this.init();
@@ -83,9 +97,60 @@ class HistoricalMap {
         this.initSlider();
         this.initInfoPanel();
         this.initKeyboardControls();
+        this.initCacheMonitor(); // NEW: Add cache monitoring
         
         // Load the initial period (1000 BC)
         this.loadPeriod(this.currentPeriodIndex);
+        
+        // Start preloading adjacent periods after initial load
+        setTimeout(() => this.preloadAdjacentPeriods(this.currentPeriodIndex), 1000);
+    }
+
+    /**
+     * NEW: Initialize cache monitoring UI
+     */
+    initCacheMonitor() {
+        const monitor = document.createElement('div');
+        monitor.id = 'cache-monitor';
+        monitor.className = 'cache-monitor backdrop-blur-10';
+        monitor.style.cssText = `
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.7rem;
+            z-index: 999;
+            display: none;
+        `;
+        monitor.innerHTML = `
+            <div>Cache: <span id="cache-size">0</span>/${this.maxCacheSize}</div>
+            <div>Hit rate: <span id="cache-hit-rate">0</span>%</div>
+        `;
+        document.body.appendChild(monitor);
+        
+        // Show cache monitor in development/debug mode
+        if (window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1')) {
+            monitor.style.display = 'block';
+        }
+    }
+
+    /**
+     * Update cache statistics display
+     */
+    updateCacheMonitor() {
+        const hitRate = this.cacheStats.hits + this.cacheStats.misses > 0 
+            ? Math.round((this.cacheStats.hits / (this.cacheStats.hits + this.cacheStats.misses)) * 100)
+            : 0;
+        
+        const sizeEl = document.getElementById('cache-size');
+        const hitRateEl = document.getElementById('cache-hit-rate');
+        
+        if (sizeEl) sizeEl.textContent = this.dataCache.size;
+        if (hitRateEl) hitRateEl.textContent = hitRate;
     }
 
     /**
@@ -93,7 +158,6 @@ class HistoricalMap {
      */
     initKeyboardControls() {
         document.addEventListener('keydown', (e) => {
-            // Only handle if not typing in an input
             if (e.target.tagName === 'INPUT') return;
             
             switch(e.key) {
@@ -127,19 +191,20 @@ class HistoricalMap {
         document.getElementById('time-slider').value = periodIndex;
         document.getElementById('current-period').textContent = this.periods[periodIndex].label;
         this.debouncedLoadPeriod(periodIndex);
+        
+        // Preload adjacent periods for smoother navigation
+        this.preloadAdjacentPeriods(periodIndex);
     }
 
     /**
      * Initialize the Leaflet map
      */
     initMap() {
-        // Define world bounds to prevent infinite panning
         const worldBounds = L.latLngBounds(
-            L.latLng(-85, -180), // Southwest corner
-            L.latLng(85, 180)    // Northeast corner
+            L.latLng(-85, -180),
+            L.latLng(85, 180)
         );
 
-        // Create map centered on the world
         this.map = L.map('map', {
             center: [20, 0],
             zoom: 2,
@@ -148,19 +213,16 @@ class HistoricalMap {
             worldCopyJump: false,
             maxBounds: worldBounds,
             maxBoundsViscosity: 1.0,
-            // Accessibility improvements
             keyboard: true,
             keyboardPanDelta: 80
         });
 
-        // Add base tile layer
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 8
         }).addTo(this.map);
 
-        // Add scale control
         L.control.scale({
             position: 'bottomleft'
         }).addTo(this.map);
@@ -173,15 +235,12 @@ class HistoricalMap {
         const slider = document.getElementById('time-slider');
         const currentPeriodDisplay = document.getElementById('current-period');
 
-        // Set initial values
         slider.value = this.currentPeriodIndex;
         currentPeriodDisplay.textContent = this.periods[this.currentPeriodIndex].label;
 
-        // Add ARIA labels for accessibility
         slider.setAttribute('aria-label', 'Historical time period selector');
         slider.setAttribute('aria-valuetext', this.periods[this.currentPeriodIndex].label);
 
-        // Handle slider changes
         slider.addEventListener('input', (e) => {
             const periodIndex = parseInt(e.target.value);
             this.currentPeriodIndex = periodIndex;
@@ -190,8 +249,8 @@ class HistoricalMap {
             currentPeriodDisplay.textContent = periodLabel;
             slider.setAttribute('aria-valuetext', periodLabel);
             
-            // Load new period with debouncing
             this.debouncedLoadPeriod(periodIndex);
+            this.preloadAdjacentPeriods(periodIndex);
         });
     }
 
@@ -202,7 +261,6 @@ class HistoricalMap {
         const closeButton = document.getElementById('close-info');
         const infoPanel = document.getElementById('info-panel');
         
-        // Add ARIA labels
         closeButton.setAttribute('aria-label', 'Close territory information panel');
         infoPanel.setAttribute('role', 'dialog');
         infoPanel.setAttribute('aria-live', 'polite');
@@ -220,17 +278,43 @@ class HistoricalMap {
     }, 300);
 
     /**
-     * Load and display a specific historical period
+     * ENHANCED: Load period with smart caching
      */
     async loadPeriod(periodIndex) {
         if (this.isLoading) return;
+        
+        const period = this.periods[periodIndex];
+        const cacheKey = period.file;
+        
+        // Check cache first
+        if (this.dataCache.has(cacheKey)) {
+            console.log(`Cache hit for ${period.label}`);
+            this.cacheStats.hits++;
+            this.updateCacheMonitor();
+            
+            // Use cached data immediately
+            const cachedData = this.dataCache.get(cacheKey);
+            this.updateMap(cachedData, period);
+            
+            // Move to end of cache (LRU behavior)
+            this.dataCache.delete(cacheKey);
+            this.dataCache.set(cacheKey, cachedData);
+            
+            return;
+        }
+        
+        // Cache miss - need to load from network
+        console.log(`Cache miss for ${period.label} - loading from network`);
+        this.cacheStats.misses++;
+        this.updateCacheMonitor();
         
         this.isLoading = true;
         this.showLoading();
         this.hideErrorNotification();
 
+        const startTime = performance.now();
+
         try {
-            const period = this.periods[periodIndex];
             const response = await fetch(`data/${period.file}`);
             
             if (!response.ok) {
@@ -248,7 +332,19 @@ class HistoricalMap {
                 throw new Error(`Invalid GeoJSON format in ${period.file}`);
             }
             
-            this.updateMap(geoJsonData, period);
+            // Optimize data before caching
+            const optimizedData = this.optimizeGeoJSON(geoJsonData);
+            
+            // Add to cache
+            this.addToCache(cacheKey, optimizedData);
+            
+            // Track statistics
+            const loadTime = performance.now() - startTime;
+            this.cacheStats.totalLoadTime += loadTime;
+            console.log(`Loaded ${period.label} in ${Math.round(loadTime)}ms`);
+            
+            // Update map with optimized data
+            this.updateMap(optimizedData, period);
             
         } catch (error) {
             console.error('Error loading period:', error);
@@ -260,10 +356,111 @@ class HistoricalMap {
     }
 
     /**
+     * NEW: Optimize GeoJSON data for better performance
+     */
+    optimizeGeoJSON(data) {
+        // Skip optimization for now if data is small
+        if (JSON.stringify(data).length < 500000) { // < 500KB
+            return data;
+        }
+        
+        return {
+            ...data,
+            features: data.features.map(feature => ({
+                ...feature,
+                geometry: {
+                    ...feature.geometry,
+                    // Reduce coordinate precision to 6 decimal places
+                    coordinates: this.simplifyCoordinates(feature.geometry.coordinates, 6)
+                },
+                // KEEP ALL PROPERTIES - don't strip them out
+                properties: { ...feature.properties }
+            }))
+        };
+    }
+
+    /**
+     * NEW: Simplify coordinate precision
+     */
+    simplifyCoordinates(coords, precision) {
+        if (typeof coords[0] === 'number') {
+            return coords.map(c => 
+                Math.round(c * Math.pow(10, precision)) / Math.pow(10, precision)
+            );
+        }
+        return coords.map(c => this.simplifyCoordinates(c, precision));
+    }
+
+    /**
+     * NEW: Add data to cache with LRU eviction
+     */
+    addToCache(key, data) {
+        // Check if we need to evict old entries
+        if (this.dataCache.size >= this.maxCacheSize) {
+            // Remove the least recently used (first) entry
+            const firstKey = this.dataCache.keys().next().value;
+            console.log(`Cache full - evicting ${firstKey}`);
+            this.dataCache.delete(firstKey);
+        }
+        
+        this.dataCache.set(key, data);
+        this.updateCacheMonitor();
+        
+        // Estimate memory usage (rough estimate)
+        const sizeInMB = JSON.stringify(data).length / (1024 * 1024);
+        console.log(`Cached ${key} (≈${sizeInMB.toFixed(2)} MB). Cache size: ${this.dataCache.size}/${this.maxCacheSize}`);
+    }
+
+    /**
+     * NEW: Preload adjacent periods for smooth navigation
+     */
+    async preloadAdjacentPeriods(currentIndex) {
+        if (this.isPreloading) return;
+        
+        this.isPreloading = true;
+        
+        // Determine which periods to preload
+        const indicesToPreload = [
+            currentIndex - 1,
+            currentIndex + 1,
+            currentIndex - 2,
+            currentIndex + 2
+        ].filter(i => i >= 0 && i < this.periods.length);
+        
+        // Preload in background (don't await)
+        for (const index of indicesToPreload) {
+            const period = this.periods[index];
+            if (!this.dataCache.has(period.file) && !this.preloadQueue.has(period.file)) {
+                this.preloadQueue.add(period.file);
+                
+                // Preload with lower priority
+                setTimeout(async () => {
+                    if (!this.dataCache.has(period.file)) {
+                        try {
+                            console.log(`Preloading ${period.label} in background`);
+                            const response = await fetch(`data/${period.file}`);
+                            if (response.ok) {
+                                const data = await response.json();
+                                const optimizedData = this.optimizeGeoJSON(data);
+                                this.addToCache(period.file, optimizedData);
+                            }
+                        } catch (error) {
+                            console.warn(`Failed to preload ${period.file}:`, error);
+                        } finally {
+                            this.preloadQueue.delete(period.file);
+                        }
+                    }
+                }, 100 * (Math.abs(currentIndex - index))); // Stagger preloads
+            }
+        }
+        
+        this.isPreloading = false;
+    }
+
+    /**
      * Show error notification with retry option
      */
     showErrorNotification(message, period) {
-        // Remove existing notification
         this.hideErrorNotification();
         
         const notification = document.createElement('div');
@@ -282,9 +479,10 @@ class HistoricalMap {
         document.body.appendChild(notification);
         this.errorNotification = notification;
         
-        // Add event listeners
         document.getElementById('retry-btn').addEventListener('click', () => {
             this.hideErrorNotification();
+            // Clear cache entry for failed load
+            this.dataCache.delete(period.file);
             this.loadPeriod(this.currentPeriodIndex);
         });
         
@@ -292,7 +490,6 @@ class HistoricalMap {
             this.hideErrorNotification();
         });
         
-        // Auto-dismiss after 10 seconds
         setTimeout(() => {
             this.hideErrorNotification();
         }, 10000);
@@ -320,17 +517,14 @@ class HistoricalMap {
 
         this.hideInfoPanel();
 
-        // Create new layer with styling and interactions
         this.currentLayer = L.geoJSON(geoJsonData, {
             style: (feature) => this.getFeatureStyle(feature),
             onEachFeature: (feature, layer) => {
-                // Add click handler for territory info
                 layer.on('click', (e) => {
                     this.showTerritoryInfo(feature, layer);
                     L.DomEvent.stopPropagation(e);
                 });
 
-                // Add hover effects
                 layer.on('mouseover', (e) => {
                     if (this.selectedLayer !== e.target) {
                         this.highlightFeature(e.target);
@@ -343,7 +537,6 @@ class HistoricalMap {
                     }
                 });
 
-                // Add keyboard support for features
                 layer.getElement()?.setAttribute('tabindex', '0');
                 layer.getElement()?.setAttribute('role', 'button');
                 layer.getElement()?.setAttribute('aria-label', 
@@ -463,7 +656,6 @@ class HistoricalMap {
         
         let detailsHTML = `<strong>Territory:</strong> ${nameField}<br>`;
         
-        // Add additional properties if available
         Object.keys(properties).forEach(key => {
             if (key !== 'NAME' && key !== 'name' && properties[key] !== null && properties[key] !== '') {
                 const value = properties[key];
@@ -487,7 +679,6 @@ class HistoricalMap {
         const panel = document.getElementById('info-panel');
         panel.classList.remove('hidden');
         
-        // Focus management for accessibility
         const closeButton = document.getElementById('close-info');
         setTimeout(() => closeButton.focus(), 100);
     }
@@ -515,6 +706,38 @@ class HistoricalMap {
     }
 
     /**
+     * NEW: Clear cache (useful for debugging or memory management)
+     */
+    clearCache() {
+        const size = this.dataCache.size;
+        this.dataCache.clear();
+        this.preloadQueue.clear();
+        console.log(`Cleared cache (removed ${size} entries)`);
+        this.updateCacheMonitor();
+    }
+
+    /**
+     * NEW: Get cache statistics
+     */
+    getCacheStats() {
+        const totalRequests = this.cacheStats.hits + this.cacheStats.misses;
+        const hitRate = totalRequests > 0 
+            ? (this.cacheStats.hits / totalRequests * 100).toFixed(1)
+            : 0;
+        
+        return {
+            cacheSize: this.dataCache.size,
+            maxSize: this.maxCacheSize,
+            hits: this.cacheStats.hits,
+            misses: this.cacheStats.misses,
+            hitRate: `${hitRate}%`,
+            avgLoadTime: totalRequests > 0 
+                ? `${Math.round(this.cacheStats.totalLoadTime / this.cacheStats.misses)}ms`
+                : 'N/A'
+        };
+    }
+
+    /**
      * Cleanup method for proper disposal
      */
     destroy() {
@@ -522,6 +745,7 @@ class HistoricalMap {
             clearTimeout(this.debounceTimeout);
         }
         this.hideErrorNotification();
+        this.clearCache();
         if (this.map) {
             this.map.remove();
         }
@@ -548,6 +772,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.historicalMap = new HistoricalMap();
+    
+    // Expose cache stats for debugging
+    window.getCacheStats = () => window.historicalMap.getCacheStats();
+    window.clearCache = () => window.historicalMap.clearCache();
 });
 
 // Handle page unload for cleanup
@@ -561,8 +789,3 @@ window.addEventListener('beforeunload', () => {
 window.addEventListener('error', (e) => {
     console.error('Global error:', e.error);
 });
-
-// Export for potential external use
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = HistoricalMap;
-}
