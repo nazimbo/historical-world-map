@@ -98,10 +98,16 @@ The application utilizes all 52 available historical periods from the Historical
 ```
 historical-world-map/
 ├── index.html          # Main application page
-├── app.js             # Core application logic with enhanced features
+├── app.js             # Main orchestrator class (refactored)
 ├── styles.css         # Styling with modern glass-morphism design
 ├── README.md          # This file
 ├── .gitignore         # Git ignore file
+├── js/                # Modular JavaScript components
+│   ├── DataManager.js     # Data caching and loading
+│   ├── MapRenderer.js     # Leaflet map operations
+│   ├── UIController.js    # User interface controls
+│   ├── EventHandler.js    # Event coordination
+│   └── ErrorNotification.js # Error handling
 └── data/              # Historical GeoJSON data (52 files included)
     ├── world_bc123000.geojson # 123,000 BC - Prehistoric
     ├── world_bc10000.geojson  # 10,000 BC - End of Ice Age
@@ -111,13 +117,15 @@ historical-world-map/
 
 ## Technology Stack
 
-- **Frontend**: Vanilla JavaScript (ES6+) with modern class-based architecture
+- **Frontend**: Vanilla JavaScript (ES6+) with modular class-based architecture
+- **Architecture**: Separation of concerns with dedicated modules for data, UI, events, and rendering
 - **Mapping**: Leaflet.js v1.9.4 for interactive map rendering
 - **Styling**: CSS3 with advanced features (backdrop-filter, CSS Grid, flexbox)
 - **Data Format**: GeoJSON with comprehensive historical territory data
+- **Caching**: Smart LRU cache with preloading for smooth navigation
 - **Design**: Glass-morphism UI with responsive mobile-first design
 - **Hosting**: Any static web server (GitHub Pages, Netlify, etc.)
-- **Performance**: Debounced interactions, on-demand data loading
+- **Performance**: Debounced interactions, intelligent data caching, coordinate optimization
 - **Accessibility**: ARIA labels, keyboard navigation, focus management
 
 ## Development
@@ -150,6 +158,17 @@ Then open `http://localhost:8000` in your browser.
 - **Escape Key**: Close territory information panel
 - **Zoom**: Mouse wheel or zoom controls
 - **Pan**: Click and drag map
+
+### Architecture Overview
+
+The application follows a modular architecture with clear separation of concerns:
+
+- **DataManager**: Handles caching, loading, and GeoJSON optimization with LRU cache
+- **MapRenderer**: Manages Leaflet map operations, styling, and layer management
+- **UIController**: Controls sliders, panels, loading states, and user interface
+- **EventHandler**: Coordinates user interactions and event delegation
+- **ErrorNotification**: Centralized error handling with retry functionality
+- **HistoricalMap**: Main orchestrator that coordinates all modules
 
 ### Adding New Time Periods
 
@@ -197,13 +216,15 @@ The application includes comprehensive error handling:
 - **Invalid Data**: Validation of GeoJSON structure
 - **Browser Compatibility**: Fallbacks for unsupported features
 
-## Performance Notes
+## Performance Optimizations
 
-- **On-demand Loading**: GeoJSON files are loaded dynamically for each time period
+- **Smart Caching**: LRU cache with configurable size limits (default: 15 periods)
+- **Preloading**: Adjacent time periods are preloaded in background for smooth navigation
+- **Data Optimization**: Coordinate precision reduction for large files (>500KB)
 - **Debounced Interactions**: Slider movements are debounced to prevent excessive requests
-- **Memory Management**: Previous map layers are properly cleaned up
+- **Memory Management**: Automatic cache eviction and proper layer cleanup
 - **Responsive Design**: Mobile-first approach with optimized touch targets
-- **File Sizes**: Keep individual GeoJSON files under 3MB for optimal performance
+- **Cache Monitoring**: Development mode shows cache hit rates and statistics
 
 ## Known Limitations
 
@@ -250,14 +271,17 @@ The application includes comprehensive error handling:
 ## Current Features
 
 ### ✅ Implemented
-- Complete 52-period timeline support
-- Territory selection with persistent highlighting
-- Modern glass-morphism UI design
-- Responsive mobile-first design
-- Keyboard navigation and accessibility
-- Error handling with retry functionality
-- Loading states and user feedback
-- Debounced slider interactions
+- **Modular Architecture**: Clean separation of concerns with dedicated modules
+- **Smart Caching System**: LRU cache with preloading and optimization
+- **Complete 52-period timeline support**
+- **Territory selection with persistent highlighting**
+- **Modern glass-morphism UI design**
+- **Responsive mobile-first design**
+- **Keyboard navigation and accessibility**
+- **Advanced error handling with retry functionality**
+- **Loading states and user feedback**
+- **Performance optimizations and cache monitoring**
+- **Debounced interactions and smooth navigation**
 
 ### 🔄 Future Enhancements
 - [ ] Continuous timeline animation between periods

@@ -1,0 +1,40 @@
+{
+  "name": "historical-world-map",
+  "version": "2.0.0",
+  "description": "Interactive historical world map with modular architecture",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "npx serve . -p 8000",
+    "dev": "python -m http.server 8000",
+    "validate": "find data/ -name '*.geojson' -exec python -m json.tool {} /dev/null \\;",
+    "test": "echo \"No tests specified\" && exit 0",
+    "lint": "echo \"No linting configured\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "keywords": [
+    "history",
+    "map",
+    "interactive",
+    "geojson",
+    "leaflet",
+    "modular",
+    "javascript",
+    "educational"
+  ],
+  "author": "nazimbo",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
