@@ -8,26 +8,28 @@ class MapRenderer {
 
     initMap() {
         const worldBounds = L.latLngBounds(
-            L.latLng(-85, -180),
-            L.latLng(85, 180)
+            L.latLng(...CONSTANTS.MAP.WORLD_BOUNDS.SOUTH_WEST),
+            L.latLng(...CONSTANTS.MAP.WORLD_BOUNDS.NORTH_EAST)
         );
 
-        this.map = L.map('map', {
-            center: [20, 0],
-            zoom: 2,
-            minZoom: 1,
-            maxZoom: 8,
+        const mapConfig = Utils.getNestedProperty(window.CONFIG, 'map', {});
+        
+        this.map = L.map(CONSTANTS.SELECTORS.MAP.replace('#', ''), {
+            center: mapConfig.center || CONSTANTS.MAP.DEFAULT_CENTER,
+            zoom: mapConfig.zoom || CONSTANTS.MAP.DEFAULT_ZOOM,
+            minZoom: mapConfig.minZoom || CONSTANTS.MAP.MIN_ZOOM,
+            maxZoom: mapConfig.maxZoom || CONSTANTS.MAP.MAX_ZOOM,
             worldCopyJump: false,
             maxBounds: worldBounds,
             maxBoundsViscosity: 1.0,
             keyboard: true,
-            keyboardPanDelta: 80
+            keyboardPanDelta: mapConfig.keyboardPanDelta || CONSTANTS.MAP.KEYBOARD_PAN_DELTA
         });
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 8
+        L.tileLayer(CONSTANTS.TILES.CARTO_LIGHT, {
+            attribution: CONSTANTS.TILES.ATTRIBUTION,
+            subdomains: CONSTANTS.TILES.SUBDOMAINS,
+            maxZoom: mapConfig.maxZoom || CONSTANTS.MAP.MAX_ZOOM
         }).addTo(this.map);
 
         L.control.scale({
@@ -81,47 +83,33 @@ class MapRenderer {
         const element = layer.getElement();
         if (element) {
             element.setAttribute('tabindex', '0');
-            element.setAttribute('role', 'button');
-            element.setAttribute('aria-label', 
-                `Territory: ${feature.properties.NAME || feature.properties.name || 'Unknown'}`);
+            element.setAttribute('role', CONSTANTS.ACCESSIBILITY.ROLES.BUTTON);
+            element.setAttribute(CONSTANTS.ACCESSIBILITY.ARIA.LABEL, 
+                `Territory: ${Utils.getTerritoryName(feature.properties)}`);
         }
     }
 
     getFeatureStyle(feature) {
-        const hasData = this.hasValidData(feature);
+        const hasData = Utils.hasValidFeatureData(feature);
         
         return {
-            fillColor: hasData ? '#3498db' : '#95a5a6',
-            weight: 1.5,
-            opacity: 0.9,
+            fillColor: hasData ? CONSTANTS.TERRITORY.DEFAULT_FILL_COLOR : CONSTANTS.TERRITORY.INACTIVE_FILL_COLOR,
+            weight: CONSTANTS.TERRITORY.DEFAULT_WEIGHT,
+            opacity: CONSTANTS.TERRITORY.DEFAULT_OPACITY,
             color: 'rgba(255, 255, 255, 0.8)',
-            fillOpacity: hasData ? 0.7 : 0.4,
+            fillOpacity: hasData ? CONSTANTS.TERRITORY.ACTIVE_FILL_OPACITY : CONSTANTS.TERRITORY.INACTIVE_FILL_OPACITY,
             dashArray: null,
-            className: 'territory-feature'
+            className: CONSTANTS.CLASSES.TERRITORY_FEATURE
         };
-    }
-    
-    hasValidData(feature) {
-        const props = feature.properties;
-        if (!props) return false;
-        
-        const name = props.NAME || props.name;
-        if (!name || name.trim() === '') return false;
-        
-        const keyFields = Object.keys(props).filter(key => 
-            key !== 'NAME' && key !== 'name' && props[key] !== null
-        );
-        
-        return keyFields.length > 0;
     }
 
     highlightFeature(layer) {
         layer.setStyle({
-            weight: 3,
+            weight: CONSTANTS.TERRITORY.HOVER_WEIGHT,
             color: 'rgba(255, 255, 255, 1)',
-            fillOpacity: 0.9,
-            dashArray: '5, 5',
-            className: 'territory-feature territory-hover'
+            fillOpacity: CONSTANTS.TERRITORY.ACTIVE_FILL_OPACITY + 0.2,
+            dashArray: CONSTANTS.TERRITORY.HOVER_DASH_ARRAY,
+            className: `${CONSTANTS.CLASSES.TERRITORY_FEATURE} ${CONSTANTS.CLASSES.TERRITORY_HOVER}`
         });
         
         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
@@ -132,12 +120,12 @@ class MapRenderer {
     selectFeature(layer) {
         this.selectedLayer = layer;
         layer.setStyle({
-            weight: 4,
+            weight: CONSTANTS.TERRITORY.SELECTED_WEIGHT,
             color: 'rgba(255, 255, 255, 1)',
-            fillColor: 'rgba(255, 215, 0, 0.8)',
-            fillOpacity: 0.9,
+            fillColor: CONSTANTS.TERRITORY.SELECTED_FILL_COLOR,
+            fillOpacity: CONSTANTS.TERRITORY.ACTIVE_FILL_OPACITY + 0.2,
             dashArray: null,
-            className: 'territory-feature territory-selected'
+            className: `${CONSTANTS.CLASSES.TERRITORY_FEATURE} ${CONSTANTS.CLASSES.TERRITORY_SELECTED}`
         });
         
         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {

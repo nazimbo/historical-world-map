@@ -1,20 +1,35 @@
 class ErrorNotification {
     constructor() {
         this.currentNotification = null;
+        this.errorHandler = new ErrorHandler();
+        this.displayTime = Utils.getNestedProperty(window.CONFIG, 'ui.errorDisplayTime', CONSTANTS.UI.ERROR_DISPLAY_TIME);
     }
 
-    show(message, period, onRetry) {
+    show(error, period, onRetry) {
         this.hide();
         
+        // Process error through error handler
+        const processedError = this.errorHandler.handleError(
+            error, 
+            this.errorHandler.createPeriodContext(period)
+        );
+        
         const notification = document.createElement('div');
-        notification.className = 'error-notification backdrop-blur-20';
+        const notificationId = Utils.createSafeId(`error-notification-${Date.now()}`);
+        notification.id = notificationId;
+        notification.className = `${CONSTANTS.CLASSES.ERROR_NOTIFICATION} ${CONSTANTS.CLASSES.BACKDROP_BLUR_20}`;
+        
+        const canRetry = processedError.canRetry;
+        const retryButtonHtml = canRetry ? 
+            `<button id="retry-btn-${notificationId}" class="retry-button">Retry</button>` : '';
+        
         notification.innerHTML = `
             <div class="error-content">
                 <h4>⚠️ Unable to Load Historical Data</h4>
-                <p>${message}</p>
+                <p>${Validators.sanitizeInput(processedError.userMessage)}</p>
                 <div class="error-actions">
-                    <button id="retry-btn" class="retry-button">Retry</button>
-                    <button id="dismiss-btn" class="dismiss-button">Dismiss</button>
+                    ${retryButtonHtml}
+                    <button id="dismiss-btn-${notificationId}" class="dismiss-button">Dismiss</button>
                 </div>
             </div>
         `;
@@ -22,20 +37,30 @@ class ErrorNotification {
         document.body.appendChild(notification);
         this.currentNotification = notification;
         
-        document.getElementById('retry-btn').addEventListener('click', () => {
-            this.hide();
-            if (onRetry) {
-                onRetry(period);
-            }
-        });
+        const retryBtn = document.getElementById(`retry-btn-${notificationId}`);
+        const dismissBtn = document.getElementById(`dismiss-btn-${notificationId}`);
         
-        document.getElementById('dismiss-btn').addEventListener('click', () => {
-            this.hide();
-        });
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} User requested retry for ${period?.label || 'unknown period'}`);
+                this.hide();
+                if (onRetry) {
+                    onRetry(period);
+                }
+            });
+        }
         
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} User dismissed error notification`);
+                this.hide();
+            });
+        }
+        
+        // Auto-hide after configured time
         setTimeout(() => {
             this.hide();
-        }, 10000);
+        }, this.displayTime);
     }
 
     hide() {

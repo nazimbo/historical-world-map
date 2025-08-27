@@ -68,10 +68,12 @@ class HistoricalMap {
         this.uiController = new UIController(this.periods);
         this.eventHandler = new EventHandler(this.mapRenderer, this.uiController);
         this.errorNotification = new ErrorNotification();
+        this.errorHandler = new ErrorHandler();
 
-        this.debouncedLoadPeriod = this.debounce((periodIndex) => {
+        const debounceDelay = Utils.getNestedProperty(window.CONFIG, 'ui.debounceDelay', CONSTANTS.UI.DEFAULT_DEBOUNCE_DELAY);
+        this.debouncedLoadPeriod = Utils.debounce((periodIndex) => {
             this.loadPeriod(periodIndex);
-        }, 300);
+        }, debounceDelay);
 
         this.init();
     }
@@ -84,7 +86,8 @@ class HistoricalMap {
         const initialPeriodIndex = this.uiController.getCurrentPeriodIndex();
         this.loadPeriod(initialPeriodIndex);
         
-        setTimeout(() => this.dataManager.preloadAdjacentPeriods(this.periods, initialPeriodIndex), 1000);
+        const preloadDelay = Utils.getNestedProperty(window.CONFIG, 'performance.preloadDelay', CONSTANTS.UI.PRELOAD_DELAY);
+        setTimeout(() => this.dataManager.preloadAdjacentPeriods(this.periods, initialPeriodIndex), preloadDelay);
     }
 
     setupEventHandlers() {
@@ -99,9 +102,10 @@ class HistoricalMap {
     }
 
     initUI() {
-        const debouncedPeriodChange = this.uiController.debounce((periodIndex) => {
+        const debounceDelay = Utils.getNestedProperty(window.CONFIG, 'ui.debounceDelay', CONSTANTS.UI.DEFAULT_DEBOUNCE_DELAY);
+        const debouncedPeriodChange = Utils.debounce((periodIndex) => {
             this.eventHandler.handlePeriodNavigation(periodIndex);
-        }, 300);
+        }, debounceDelay);
 
         this.uiController.initSlider(debouncedPeriodChange);
         this.uiController.initInfoPanel(() => this.eventHandler.handleInfoPanelClose());
@@ -138,9 +142,10 @@ class HistoricalMap {
             this.uiController.updateCacheMonitor(this.dataManager.getCacheStats());
             
         } catch (error) {
-            console.error('Error loading period:', error);
-            this.errorNotification.show(error.message, period, (retryPeriod) => {
-                this.dataManager.deleteCacheEntry(retryPeriod.file);
+            console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Error loading period:`, error);
+            this.errorNotification.show(error, period, (retryPeriod) => {
+                const cacheKey = Utils.getCacheKey(retryPeriod);
+                this.dataManager.deleteCacheEntry(cacheKey);
                 this.loadPeriod(this.uiController.getCurrentPeriodIndex());
             });
         } finally {
@@ -186,15 +191,22 @@ class HistoricalMap {
     }
 
     debounce(func, wait) {
-        return this.uiController.debounce(func, wait);
+        return Utils.debounce(func, wait);
     }
 }
 
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    if (!document.getElementById('map')) {
-        console.error('Map container not found!');
+    const mapContainer = document.querySelector(CONSTANTS.SELECTORS.MAP);
+    if (!mapContainer) {
+        console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Map container not found!`);
         return;
+    }
+
+    // Validate configuration
+    const configValidation = Validators.validateConfiguration(window.CONFIG);
+    if (configValidation.warnings.length > 0) {
+        console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Configuration warnings:`, configValidation.warnings);
     }
 
     window.historicalMap = new HistoricalMap();
@@ -213,5 +225,12 @@ window.addEventListener('beforeunload', () => {
 
 // Handle global errors
 window.addEventListener('error', (e) => {
-    console.error('Global error:', e.error);
+    console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Global error:`, e.error);
+    
+    // Create global error handler if not exists
+    if (!window.globalErrorHandler) {
+        window.globalErrorHandler = new ErrorHandler();
+    }
+    
+    window.globalErrorHandler.handleError(e.error, 'global');
 });

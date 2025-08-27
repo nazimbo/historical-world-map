@@ -6,47 +6,47 @@
 const CONFIG = {
   // Cache settings
   cache: {
-    maxSize: 15,              // Maximum number of periods to cache
-    preloadDistance: 2,       // Number of adjacent periods to preload
-    optimizationThreshold: 500000  // File size threshold for optimization (bytes)
+    maxSize: CONSTANTS?.CACHE?.DEFAULT_MAX_SIZE || 15,
+    preloadDistance: CONSTANTS?.CACHE?.DEFAULT_PRELOAD_DISTANCE || 2,
+    optimizationThreshold: CONSTANTS?.CACHE?.DEFAULT_OPTIMIZATION_THRESHOLD || 500000
   },
 
   // Map settings
   map: {
-    center: [20, 0],          // Default map center [lat, lng]
-    zoom: 2,                  // Default zoom level
-    minZoom: 1,               // Minimum zoom level
-    maxZoom: 8,               // Maximum zoom level
-    keyboardPanDelta: 80      // Keyboard pan distance
+    center: CONSTANTS?.MAP?.DEFAULT_CENTER || [20, 0],
+    zoom: CONSTANTS?.MAP?.DEFAULT_ZOOM || 2,
+    minZoom: CONSTANTS?.MAP?.MIN_ZOOM || 1,
+    maxZoom: CONSTANTS?.MAP?.MAX_ZOOM || 8,
+    keyboardPanDelta: CONSTANTS?.MAP?.KEYBOARD_PAN_DELTA || 80
   },
 
   // UI settings
   ui: {
-    debounceDelay: 300,       // Debounce delay for slider (ms)
-    loadingTimeout: 10000,    // Loading timeout (ms)
-    errorDisplayTime: 10000,  // Error notification display time (ms)
-    focusDelay: 100          // Focus delay for accessibility (ms)
+    debounceDelay: CONSTANTS?.UI?.DEFAULT_DEBOUNCE_DELAY || 300,
+    loadingTimeout: CONSTANTS?.UI?.LOADING_TIMEOUT || 10000,
+    errorDisplayTime: CONSTANTS?.UI?.ERROR_DISPLAY_TIME || 10000,
+    focusDelay: CONSTANTS?.UI?.FOCUS_DELAY || 100
   },
 
   // Performance settings
   performance: {
-    coordinatePrecision: 6,   // Decimal places for coordinate precision
-    preloadDelay: 1000,      // Initial preload delay (ms)
-    preloadStagger: 100      // Stagger between preloads (ms)
+    coordinatePrecision: CONSTANTS?.DATA?.COORDINATE_PRECISION || 6,
+    preloadDelay: CONSTANTS?.UI?.PRELOAD_DELAY || 1000,
+    preloadStagger: CONSTANTS?.UI?.PRELOAD_STAGGER || 100
   },
 
   // Development settings
   development: {
-    showCacheMonitor: true,   // Show cache monitor in dev mode
-    enableLogging: true,      // Enable console logging
-    logCacheStats: true      // Log cache statistics
+    showCacheMonitor: true,
+    enableLogging: true,
+    logCacheStats: true
   },
 
   // Accessibility settings
   accessibility: {
-    enableKeyboardNav: true,  // Enable keyboard navigation
-    enableScreenReader: true, // Enable screen reader support
-    enableFocusManagement: true // Enable focus management
+    enableKeyboardNav: true,
+    enableScreenReader: true,
+    enableFocusManagement: true
   }
 };
 

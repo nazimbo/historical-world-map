@@ -1,0 +1,105 @@
+/* Layout styles - Map container, positioning, and grid */
+
+/* Map container - Full focus */
+#map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+}
+
+/* Header positioning */
+header {
+    background: rgba(0, 0, 0, 0.25);
+    color: white;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 1000;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 
+                0 0 16px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Time controls positioning */
+#time-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 1.25rem 1.75rem;
+    border-radius: 20px;
+    z-index: 1000;
+    min-width: 500px;
+    max-width: 800px;
+    width: 70vw;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 
+                0 0 20px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Info panel positioning */
+#info-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 320px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25), 
+                0 0 20px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Footer positioning */
+footer {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.6rem 0.9rem;
+    text-align: center;
+    font-size: 0.7rem;
+    border-radius: 16px;
+    z-index: 1000;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15), 
+                0 0 12px rgba(255, 255, 255, 0.03),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

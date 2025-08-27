@@ -1,7 +1,9 @@
 class DataManager {
     constructor() {
         this.dataCache = new Map();
-        this.maxCacheSize = 15;
+        this.maxCacheSize = Utils.getNestedProperty(window.CONFIG, 'cache.maxSize', CONSTANTS.CACHE.DEFAULT_MAX_SIZE);
+        this.optimizationThreshold = Utils.getNestedProperty(window.CONFIG, 'cache.optimizationThreshold', CONSTANTS.CACHE.DEFAULT_OPTIMIZATION_THRESHOLD);
+        this.coordinatePrecision = Utils.getNestedProperty(window.CONFIG, 'performance.coordinatePrecision', CONSTANTS.DATA.COORDINATE_PRECISION);
         this.cacheStats = {
             hits: 0,
             misses: 0,
@@ -10,15 +12,17 @@ class DataManager {
         };
         this.preloadQueue = new Set();
         this.isPreloading = false;
+        this.errorHandler = new ErrorHandler();
     }
 
     async loadPeriod(period) {
-        const cacheKey = period.file;
+        const cacheKey = Utils.getCacheKey(period);
         
         if (this.dataCache.has(cacheKey)) {
-            console.log(`Cache hit for ${period.label}`);
+            console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Cache hit for ${period.label}`);
             this.cacheStats.hits++;
             
+            // Move to end (LRU)
             const cachedData = this.dataCache.get(cacheKey);
             this.dataCache.delete(cacheKey);
             this.dataCache.set(cacheKey, cachedData);
@@ -26,7 +30,7 @@ class DataManager {
             return cachedData;
         }
         
-        console.log(`Cache miss for ${period.label} - loading from network`);
+        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Cache miss for ${period.label} - loading from network`);
         this.cacheStats.misses++;
         
         const startTime = performance.now();
@@ -34,18 +38,21 @@ class DataManager {
         try {
             const response = await fetch(`data/${period.file}`);
             
-            if (!response.ok) {
-                if (response.status === 404) {
-                    throw new Error(`Data file not found: ${period.file}. Please ensure the data directory contains all required GeoJSON files.`);
-                } else {
-                    throw new Error(`Failed to load ${period.file}: ${response.status} ${response.statusText}`);
-                }
+            const responseValidation = Validators.validateResponse(response, `loading ${period.file}`);
+            if (!responseValidation.isValid) {
+                throw new Error(responseValidation.errors[0]);
             }
 
             const geoJsonData = await response.json();
             
-            if (!geoJsonData.type || !geoJsonData.features) {
-                throw new Error(`Invalid GeoJSON format in ${period.file}`);
+            const dataValidation = Validators.validateGeoJSON(geoJsonData, period.file);
+            if (!dataValidation.isValid) {
+                throw new Error(`Invalid GeoJSON in ${period.file}: ${dataValidation.errors[0]}`);
+            }
+            
+            // Log warnings if any
+            if (dataValidation.warnings.length > 0) {
+                console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Warnings for ${period.file}:`, dataValidation.warnings);
             }
             
             const optimizedData = this.optimizeGeoJSON(geoJsonData);
@@ -53,20 +60,25 @@ class DataManager {
             
             const loadTime = performance.now() - startTime;
             this.cacheStats.totalLoadTime += loadTime;
-            console.log(`Loaded ${period.label} in ${Math.round(loadTime)}ms`);
+            const sizeInBytes = JSON.stringify(optimizedData).length;
+            this.cacheStats.totalBytesLoaded += sizeInBytes;
+            console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Loaded ${period.label} in ${Math.round(loadTime)}ms (${Utils.formatFileSize(sizeInBytes)})`);
             
             return optimizedData;
             
         } catch (error) {
-            console.error('Error loading period:', error);
-            throw error;
+            const processedError = this.errorHandler.handleError(error, this.errorHandler.createPeriodContext(period));
+            throw new Error(processedError.technicalMessage);
         }
     }
 
     optimizeGeoJSON(data) {
-        if (JSON.stringify(data).length < 500000) {
+        const dataSize = JSON.stringify(data).length;
+        if (dataSize < this.optimizationThreshold) {
             return data;
         }
+        
+        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Optimizing GeoJSON data (${Utils.formatFileSize(dataSize)})`);
         
         return {
             ...data,
@@ -74,69 +86,70 @@ class DataManager {
                 ...feature,
                 geometry: {
                     ...feature.geometry,
-                    coordinates: this.simplifyCoordinates(feature.geometry.coordinates, 6)
+                    coordinates: Utils.simplifyCoordinates(feature.geometry.coordinates, this.coordinatePrecision)
                 },
                 properties: { ...feature.properties }
             }))
         };
     }
 
-    simplifyCoordinates(coords, precision) {
-        if (typeof coords[0] === 'number') {
-            return coords.map(c => 
-                Math.round(c * Math.pow(10, precision)) / Math.pow(10, precision)
-            );
-        }
-        return coords.map(c => this.simplifyCoordinates(c, precision));
-    }
-
     addToCache(key, data) {
+        // LRU eviction
         if (this.dataCache.size >= this.maxCacheSize) {
             const firstKey = this.dataCache.keys().next().value;
-            console.log(`Cache full - evicting ${firstKey}`);
+            console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Cache full - evicting ${firstKey}`);
             this.dataCache.delete(firstKey);
         }
         
         this.dataCache.set(key, data);
         
-        const sizeInMB = JSON.stringify(data).length / (1024 * 1024);
-        console.log(`Cached ${key} (≈${sizeInMB.toFixed(2)} MB). Cache size: ${this.dataCache.size}/${this.maxCacheSize}`);
+        const sizeInBytes = JSON.stringify(data).length;
+        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Cached ${key} (${Utils.formatFileSize(sizeInBytes)}). Cache size: ${this.dataCache.size}/${this.maxCacheSize}`);
     }
 
     async preloadAdjacentPeriods(periods, currentIndex) {
         if (this.isPreloading) return;
         
         this.isPreloading = true;
+        const preloadDistance = Utils.getNestedProperty(window.CONFIG, 'cache.preloadDistance', CONSTANTS.CACHE.DEFAULT_PRELOAD_DISTANCE);
         
-        const indicesToPreload = [
-            currentIndex - 1,
-            currentIndex + 1,
-            currentIndex - 2,
-            currentIndex + 2
-        ].filter(i => i >= 0 && i < periods.length);
+        const indicesToPreload = [];
+        for (let i = 1; i <= preloadDistance; i++) {
+            indicesToPreload.push(currentIndex - i, currentIndex + i);
+        }
+        const validIndices = indicesToPreload.filter(i => i >= 0 && i < periods.length);
         
-        for (const index of indicesToPreload) {
+        for (const index of validIndices) {
             const period = periods[index];
-            if (!this.dataCache.has(period.file) && !this.preloadQueue.has(period.file)) {
-                this.preloadQueue.add(period.file);
+            const cacheKey = Utils.getCacheKey(period);
+            
+            if (!this.dataCache.has(cacheKey) && !this.preloadQueue.has(cacheKey)) {
+                this.preloadQueue.add(cacheKey);
+                
+                const delay = Utils.getNestedProperty(window.CONFIG, 'performance.preloadStagger', CONSTANTS.UI.PRELOAD_STAGGER) * Math.abs(currentIndex - index);
                 
                 setTimeout(async () => {
-                    if (!this.dataCache.has(period.file)) {
+                    if (!this.dataCache.has(cacheKey)) {
                         try {
-                            console.log(`Preloading ${period.label} in background`);
+                            console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Preloading ${period.label} in background`);
                             const response = await fetch(`data/${period.file}`);
                             if (response.ok) {
                                 const data = await response.json();
-                                const optimizedData = this.optimizeGeoJSON(data);
-                                this.addToCache(period.file, optimizedData);
+                                const validation = Validators.validateGeoJSON(data, period.file);
+                                if (validation.isValid) {
+                                    const optimizedData = this.optimizeGeoJSON(data);
+                                    this.addToCache(cacheKey, optimizedData);
+                                } else {
+                                    console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Invalid preloaded data for ${period.file}:`, validation.errors);
+                                }
                             }
                         } catch (error) {
-                            console.warn(`Failed to preload ${period.file}:`, error);
+                            console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Failed to preload ${period.file}:`, error.message);
                         } finally {
-                            this.preloadQueue.delete(period.file);
+                            this.preloadQueue.delete(cacheKey);
                         }
                     }
-                }, 100 * (Math.abs(currentIndex - index)));
+                }, delay);
             }
         }
         

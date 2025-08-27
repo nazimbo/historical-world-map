@@ -21,8 +21,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- Custom CSS - Modular approach -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/map.css">
+    <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
     <div id="app">
@@ -80,7 +84,11 @@
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
     
-    <!-- Configuration -->
+    <!-- Load order: Constants → Utils → Validators → ErrorHandler → Configuration → Modules → App -->
+    <script src="js/constants.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/validators.js"></script>
+    <script src="js/ErrorHandler.js"></script>
     <script src="config.js"></script>
     
     <!-- Custom JavaScript Modules -->
