@@ -27,6 +27,7 @@ const CONSTANTS = {
 
     // UI timing and behavior
     UI: {
+        DEFAULT_PERIOD_INDEX: 8, // Default to 1000 BC (index 8 in periods array)
         DEFAULT_DEBOUNCE_DELAY: 300,
         LOADING_TIMEOUT: 10000,
         ERROR_DISPLAY_TIME: 10000,

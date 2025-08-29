@@ -1,16 +1,28 @@
 class UIController {
     constructor(periods) {
         this.periods = periods;
-        this.currentPeriodIndex = 8; // Default to 1000 BC
+        this.currentPeriodIndex = CONSTANTS.UI.DEFAULT_PERIOD_INDEX;
         this.debounceTimeout = null;
         this.onPeriodChange = null;
         this.cacheMonitor = null;
         this.focusDelay = Utils.getNestedProperty(window.CONFIG, 'ui.focusDelay', CONSTANTS.UI.FOCUS_DELAY);
+        
+        // Cache frequently accessed DOM elements
+        this.elements = {
+            slider: document.querySelector(CONSTANTS.SELECTORS.TIME_SLIDER),
+            currentPeriodDisplay: document.querySelector(CONSTANTS.SELECTORS.CURRENT_PERIOD),
+            infoPanel: document.querySelector(CONSTANTS.SELECTORS.INFO_PANEL),
+            closeButton: document.querySelector(CONSTANTS.SELECTORS.CLOSE_INFO),
+            loading: document.querySelector(CONSTANTS.SELECTORS.LOADING),
+            territoryName: document.querySelector(CONSTANTS.SELECTORS.TERRITORY_NAME),
+            territoryDetails: document.querySelector(CONSTANTS.SELECTORS.TERRITORY_DETAILS),
+            cacheSize: document.querySelector(CONSTANTS.SELECTORS.CACHE_SIZE),
+            cacheHitRate: document.querySelector(CONSTANTS.SELECTORS.CACHE_HIT_RATE)
+        };
     }
 
     initSlider(onInputCallback) {
-        const slider = document.querySelector(CONSTANTS.SELECTORS.TIME_SLIDER);
-        const currentPeriodDisplay = document.querySelector(CONSTANTS.SELECTORS.CURRENT_PERIOD);
+        const { slider, currentPeriodDisplay } = this.elements;
         
         if (!slider || !currentPeriodDisplay) {
             console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Required slider elements not found`);
@@ -39,8 +51,7 @@ class UIController {
     }
 
     initInfoPanel(onCloseCallback) {
-        const closeButton = document.querySelector(CONSTANTS.SELECTORS.CLOSE_INFO);
-        const infoPanel = document.querySelector(CONSTANTS.SELECTORS.INFO_PANEL);
+        const { closeButton, infoPanel } = this.elements;
         
         if (!closeButton || !infoPanel) {
             console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Info panel elements not found`);
@@ -64,8 +75,7 @@ class UIController {
             
             switch(e.key) {
                 case CONSTANTS.KEYS.ESCAPE:
-                    const infoPanel = document.querySelector(CONSTANTS.SELECTORS.INFO_PANEL);
-                    if (infoPanel && !infoPanel.classList.contains(CONSTANTS.CLASSES.HIDDEN)) {
+                    if (this.elements.infoPanel && !this.elements.infoPanel.classList.contains(CONSTANTS.CLASSES.HIDDEN)) {
                         if (closeCallback) closeCallback();
                         e.preventDefault();
                     }
@@ -119,40 +129,36 @@ class UIController {
     }
 
     updateCacheMonitor(cacheStats) {
-        const sizeEl = document.querySelector(CONSTANTS.SELECTORS.CACHE_SIZE);
-        const hitRateEl = document.querySelector(CONSTANTS.SELECTORS.CACHE_HIT_RATE);
+        const { cacheSize, cacheHitRate } = this.elements;
         
-        if (sizeEl) sizeEl.textContent = cacheStats.cacheSize;
-        if (hitRateEl) hitRateEl.textContent = cacheStats.hitRate.replace('%', '');
+        if (cacheSize) cacheSize.textContent = cacheStats.cacheSize;
+        if (cacheHitRate) cacheHitRate.textContent = cacheStats.hitRate.replace('%', '');
     }
 
     navigateToPeriod(periodIndex) {
         this.currentPeriodIndex = periodIndex;
-        const slider = document.querySelector(CONSTANTS.SELECTORS.TIME_SLIDER);
-        const display = document.querySelector(CONSTANTS.SELECTORS.CURRENT_PERIOD);
+        const { slider, currentPeriodDisplay } = this.elements;
         
         if (slider) {
             slider.value = periodIndex;
             slider.setAttribute(CONSTANTS.ACCESSIBILITY.ARIA.VALUE_TEXT, this.periods[periodIndex].label);
         }
-        if (display) {
-            display.textContent = this.periods[periodIndex].label;
+        if (currentPeriodDisplay) {
+            currentPeriodDisplay.textContent = this.periods[periodIndex].label;
         }
     }
 
     showTerritoryInfo(feature, currentPeriod) {
         const properties = feature.properties;
         const nameField = Utils.getTerritoryName(properties);
+        const { territoryName, territoryDetails } = this.elements;
         
-        const nameEl = document.querySelector(CONSTANTS.SELECTORS.TERRITORY_NAME);
-        const detailsEl = document.querySelector(CONSTANTS.SELECTORS.TERRITORY_DETAILS);
-        
-        if (!nameEl || !detailsEl) {
+        if (!territoryName || !territoryDetails) {
             console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Territory info elements not found`);
             return;
         }
         
-        nameEl.textContent = nameField;
+        territoryName.textContent = nameField;
         
         let detailsHTML = `<strong>Territory:</strong> ${Validators.sanitizeInput(nameField)}<br>`;
         
@@ -166,41 +172,37 @@ class UIController {
         
         detailsHTML += `<strong>Period:</strong> ${Validators.sanitizeInput(currentPeriod.label)}<br>`;
         
-        detailsEl.innerHTML = detailsHTML;
+        territoryDetails.innerHTML = detailsHTML;
         
         this.showInfoPanel();
     }
 
     showInfoPanel() {
-        const panel = document.querySelector(CONSTANTS.SELECTORS.INFO_PANEL);
-        if (!panel) return;
+        const { infoPanel, closeButton } = this.elements;
+        if (!infoPanel) return;
         
-        panel.classList.remove(CONSTANTS.CLASSES.HIDDEN);
+        infoPanel.classList.remove(CONSTANTS.CLASSES.HIDDEN);
         
-        const closeButton = document.querySelector(CONSTANTS.SELECTORS.CLOSE_INFO);
         if (closeButton) {
             setTimeout(() => closeButton.focus(), this.focusDelay);
         }
     }
 
     hideInfoPanel() {
-        const panel = document.querySelector(CONSTANTS.SELECTORS.INFO_PANEL);
-        if (panel) {
-            panel.classList.add(CONSTANTS.CLASSES.HIDDEN);
+        if (this.elements.infoPanel) {
+            this.elements.infoPanel.classList.add(CONSTANTS.CLASSES.HIDDEN);
         }
     }
 
     showLoading() {
-        const loading = document.querySelector(CONSTANTS.SELECTORS.LOADING);
-        if (loading) {
-            loading.classList.remove(CONSTANTS.CLASSES.HIDDEN);
+        if (this.elements.loading) {
+            this.elements.loading.classList.remove(CONSTANTS.CLASSES.HIDDEN);
         }
     }
 
     hideLoading() {
-        const loading = document.querySelector(CONSTANTS.SELECTORS.LOADING);
-        if (loading) {
-            loading.classList.add(CONSTANTS.CLASSES.HIDDEN);
+        if (this.elements.loading) {
+            this.elements.loading.classList.add(CONSTANTS.CLASSES.HIDDEN);
         }
     }
 
@@ -212,9 +214,6 @@ class UIController {
         this.currentPeriodIndex = index;
     }
 
-    debounce(func, wait) {
-        return Utils.debounce(func, wait);
-    }
 
     destroy() {
         if (this.debounceTimeout) {

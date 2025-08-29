@@ -190,9 +190,6 @@ class HistoricalMap {
         this.mapRenderer.destroy();
     }
 
-    debounce(func, wait) {
-        return Utils.debounce(func, wait);
-    }
 }
 
 // Initialize the application when the DOM is loaded
