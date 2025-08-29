@@ -160,21 +160,46 @@ class UIController {
         
         territoryName.textContent = nameField;
         
-        let detailsHTML = `<strong>Territory:</strong> ${Validators.sanitizeInput(nameField)}<br>`;
+        // Clear previous content
+        territoryDetails.innerHTML = '';
         
+        // Create territory info element
+        this.createInfoElement(territoryDetails, 'Territory', Validators.sanitizeInput(nameField));
+        
+        // Add property information
         Object.keys(properties).forEach(key => {
             if (key !== 'NAME' && key !== 'name' && key !== 'NAME_EN' && properties[key] !== null && properties[key] !== '') {
                 const value = Validators.sanitizeInput(String(properties[key]));
                 const displayKey = Utils.formatPropertyKey(key);
-                detailsHTML += `<strong>${displayKey}:</strong> ${value}<br>`;
+                this.createInfoElement(territoryDetails, displayKey, value);
             }
         });
         
-        detailsHTML += `<strong>Period:</strong> ${Validators.sanitizeInput(currentPeriod.label)}<br>`;
-        
-        territoryDetails.innerHTML = detailsHTML;
+        // Add period information
+        this.createInfoElement(territoryDetails, 'Period', Validators.sanitizeInput(currentPeriod.label));
         
         this.showInfoPanel();
+    }
+
+    /**
+     * Create a safe info element without using innerHTML
+     * @param {HTMLElement} container - Container to append to
+     * @param {string} label - Label text
+     * @param {string} value - Value text
+     */
+    createInfoElement(container, label, value) {
+        const div = document.createElement('div');
+        
+        const strongElement = document.createElement('strong');
+        strongElement.textContent = label + ':';
+        
+        const textNode = document.createTextNode(' ' + value);
+        
+        div.appendChild(strongElement);
+        div.appendChild(textNode);
+        div.appendChild(document.createElement('br'));
+        
+        container.appendChild(div);
     }
 
     showInfoPanel() {

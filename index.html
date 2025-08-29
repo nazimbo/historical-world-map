@@ -6,6 +6,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#667eea">
+    
+    <!-- Content Security Policy for XSS protection -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' https://unpkg.com/leaflet@1.9.4/dist/;
+        style-src 'self' https://unpkg.com/leaflet@1.9.4/dist/ https://fonts.googleapis.com 'unsafe-inline';
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' https://img.icons8.com https://*.basemaps.cartocdn.com data:;
+        connect-src 'self';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        frame-ancestors 'none';
+    ">
+    
     <title>Historical Interactive World Map</title>
     
     <!-- Favicon and Icons -->

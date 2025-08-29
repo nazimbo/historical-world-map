@@ -297,7 +297,13 @@ class Validators {
 
         return input
             .substring(0, maxLength)
-            .replace(/[<>]/g, '') // Remove potentially dangerous HTML characters
+            .replace(/[&<>"']/g, (match) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#x27;'
+            }[match]))
             .trim();
     }
 
