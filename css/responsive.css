@@ -10,18 +10,17 @@
     }
     
     header {
-        top: max(env(safe-area-inset-top), 10px);
-        left: max(env(safe-area-inset-left), 10px);
-        right: max(env(safe-area-inset-right), 10px);
-        padding: 0.7rem 1rem;
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        background: rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 18px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 
-                    0 0 16px rgba(255, 255, 255, 0.05),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        top: var(--safe-area-top);
+        left: var(--safe-area-left);
+        right: var(--safe-area-right);
+        padding: 0.7rem var(--space-lg);
+        backdrop-filter: var(--blur-super);
+        -webkit-backdrop-filter: var(--blur-super);
+        -moz-backdrop-filter: var(--blur-super);
+        background: var(--glass-bg-medium);
+        border: 1px solid var(--glass-border-medium);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
     }
     
     header h1 {
@@ -31,8 +30,8 @@
     
     .error-notification {
         width: 95vw;
-        padding: 1.5rem;
-        border-radius: 12px;
+        padding: var(--space-2xl);
+        border-radius: var(--radius-medium);
     }
     
     .error-content h4 {
@@ -41,53 +40,52 @@
     
     .error-content p {
         font-size: 0.9rem;
-        margin-bottom: 1.25rem;
+        margin-bottom: var(--space-xl);
     }
     
     .error-actions {
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--space-sm);
     }
     
     .retry-button, .dismiss-button {
         width: 100%;
-        padding: 0.75rem;
+        padding: var(--space-md);
     }
     
     #time-controls {
-        bottom: max(env(safe-area-inset-bottom), 10px);
-        left: max(env(safe-area-inset-left), 10px);
-        right: max(env(safe-area-inset-right), 10px);
+        bottom: var(--safe-area-bottom);
+        left: var(--safe-area-left);
+        right: var(--safe-area-right);
         transform: none;
         min-width: auto;
         max-width: none;
         width: auto;
         padding: 1.2rem;
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        background: rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 20px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25), 
-                    0 0 20px rgba(255, 255, 255, 0.05),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        backdrop-filter: var(--blur-super);
+        -webkit-backdrop-filter: var(--blur-super);
+        -moz-backdrop-filter: var(--blur-super);
+        background: var(--glass-bg-medium);
+        border: 1px solid var(--glass-border-medium);
+        border-radius: var(--radius-2xl);
+        box-shadow: var(--shadow-xl);
     }
     
     #time-slider {
         height: 8px;
-        margin-bottom: 1rem;
+        margin-bottom: var(--space-lg);
     }
     
     #time-slider::-webkit-slider-thumb {
         width: 32px;
         height: 32px;
-        border: 3px solid rgba(255, 255, 255, 0.8);
+        border: 3px solid var(--text-light);
     }
     
     #time-slider::-moz-range-thumb {
         width: 32px;
         height: 32px;
-        border: 3px solid rgba(255, 255, 255, 0.8);
+        border: 3px solid var(--text-light);
     }
     
     .slider-labels {
@@ -242,8 +240,8 @@
         font-size: 0.9rem;
         margin-top: 0.4rem;
         padding: 0.6rem 0.8rem;
-        background: rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: var(--glass-bg-medium);
+        border: 1px solid var(--glass-border-heavy);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
     }
@@ -317,8 +315,8 @@
     #current-period {
         font-size: 0.8rem;
         padding: 0.5rem 0.6rem;
-        background: rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: var(--glass-bg-medium);
+        border: 1px solid var(--glass-border-heavy);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
     }
@@ -373,7 +371,7 @@
 /* Hover effects for devices that support hover */
 @media (hover: hover) {
     header:hover {
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--glass-bg-heavy);
         transform: translateY(-1px);
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 
                     0 0 24px rgba(255, 255, 255, 0.08),
@@ -381,7 +379,7 @@
     }
 
     #time-controls:hover {
-        background: rgba(0, 0, 0, 0.3);
+        background: var(--glass-bg-heavy);
         transform: translateX(-50%) translateY(-2px);
         box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25), 
                     0 0 32px rgba(255, 255, 255, 0.08),

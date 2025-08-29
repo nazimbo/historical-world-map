@@ -1,5 +1,65 @@
 /* Base styles - Reset, typography, and core utilities */
 
+/* CSS Custom Properties - Design System Variables */
+:root {
+    /* Colors - Glass morphism palette */
+    --glass-bg-light: rgba(0, 0, 0, 0.2);
+    --glass-bg-medium: rgba(0, 0, 0, 0.25);
+    --glass-bg-heavy: rgba(0, 0, 0, 0.3);
+    --glass-border-light: rgba(255, 255, 255, 0.1);
+    --glass-border-medium: rgba(255, 255, 255, 0.15);
+    --glass-border-heavy: rgba(255, 255, 255, 0.25);
+    --glass-accent: rgba(255, 255, 255, 0.05);
+    --glass-accent-strong: rgba(255, 255, 255, 0.1);
+    
+    /* Text colors */
+    --text-primary: #1a1a1a;
+    --text-light: rgba(255, 255, 255, 0.8);
+    --text-light-strong: rgba(255, 255, 255, 0.95);
+    --text-white: white;
+    
+    /* Blur effects */
+    --blur-light: blur(12px);
+    --blur-medium: blur(16px);
+    --blur-heavy: blur(20px);
+    --blur-extra: blur(24px);
+    --blur-super: blur(28px);
+    
+    /* Border radius */
+    --radius-small: 8px;
+    --radius-medium: 12px;
+    --radius-large: 16px;
+    --radius-xl: 18px;
+    --radius-2xl: 20px;
+    
+    /* Shadows */
+    --shadow-sm: 0 6px 24px rgba(0, 0, 0, 0.15), 0 0 12px rgba(255, 255, 255, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 16px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.2), 0 0 20px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 0.75rem;
+    --space-lg: 1rem;
+    --space-xl: 1.25rem;
+    --space-2xl: 1.5rem;
+    --space-3xl: 1.75rem;
+    --space-4xl: 2rem;
+    
+    /* Animation */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Layout */
+    --safe-area-top: max(env(safe-area-inset-top), 10px);
+    --safe-area-right: max(env(safe-area-inset-right), 10px);
+    --safe-area-bottom: max(env(safe-area-inset-bottom), 10px);
+    --safe-area-left: max(env(safe-area-inset-left), 10px);
+}
+
 /* Reset and base styles */
 * {
     margin: 0;
@@ -18,7 +78,7 @@
 
 /* Focus indicators */
 *:focus {
-    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline: 2px solid var(--text-light);
     outline-offset: 2px;
 }
 
@@ -27,15 +87,15 @@
 }
 
 *:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline: 2px solid var(--text-light);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: var(--radius-small);
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
-    color: #1a1a1a;
+    color: var(--text-primary);
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     background-attachment: fixed;
     min-height: 100vh;
@@ -54,18 +114,21 @@ body {
 
 /* Utility classes for consistent backdrop blur effects */
 .backdrop-blur-10 {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: var(--blur-light);
+    -webkit-backdrop-filter: var(--blur-light);
+    -moz-backdrop-filter: var(--blur-light);
 }
 
 .backdrop-blur-15 {
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: var(--blur-medium);
+    -webkit-backdrop-filter: var(--blur-medium);
+    -moz-backdrop-filter: var(--blur-medium);
 }
 
 .backdrop-blur-20 {
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: var(--blur-heavy);
+    -webkit-backdrop-filter: var(--blur-heavy);
+    -moz-backdrop-filter: var(--blur-heavy);
 }
 
 .hidden {

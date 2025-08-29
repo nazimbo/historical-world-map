@@ -2,8 +2,9 @@
 
 /* Territory styling */
 .territory-feature {
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
     filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+    -webkit-filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
 }
 
 .territory-hover {
@@ -23,17 +24,18 @@
 /* Custom map popup styles */
 .leaflet-popup-content-wrapper {
     background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-radius: 12px !important;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: var(--blur-extra);
+    -webkit-backdrop-filter: var(--blur-extra);
+    -moz-backdrop-filter: var(--blur-extra);
+    border-radius: var(--radius-medium) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px var(--glass-accent-strong) !important;
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .leaflet-popup-content {
-    margin: 16px !important;
+    margin: var(--radius-large) !important;
     line-height: 1.5;
-    color: #1a1a1a;
+    color: var(--text-primary);
     font-weight: 400;
 }
 
@@ -44,44 +46,44 @@
 
 /* Custom Leaflet control styles */
 .leaflet-control-zoom {
-    border-radius: 16px !important;
+    border-radius: var(--radius-large) !important;
     overflow: hidden;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2), 
-                0 0 20px rgba(255, 255, 255, 0.05),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+                0 0 20px var(--glass-accent),
+                inset 0 1px 0 var(--glass-accent-strong) !important;
+    border: 1px solid var(--glass-border-medium) !important;
     transform: translateZ(0);
     will-change: transform;
 }
 
 .leaflet-control-zoom a {
     background: rgba(255, 255, 255, 0.9) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    color: #1a1a1a !important;
+    backdrop-filter: var(--blur-medium);
+    -webkit-backdrop-filter: var(--blur-medium);
+    -moz-backdrop-filter: var(--blur-medium);
+    color: var(--text-primary) !important;
     border: none !important;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
     text-shadow: none;
 }
 
 .leaflet-control-zoom a:hover {
-    background: rgba(255, 255, 255, 1) !important;
+    background: var(--text-white) !important;
     transform: scale(1.05);
 }
 
 .leaflet-control-scale {
-    background: rgba(0, 0, 0, 0.2) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 12px !important;
-    color: rgba(255, 255, 255, 0.95) !important;
+    background: var(--glass-bg-light) !important;
+    backdrop-filter: var(--blur-heavy);
+    -webkit-backdrop-filter: var(--blur-heavy);
+    -moz-backdrop-filter: var(--blur-heavy);
+    border: 1px solid var(--glass-border-medium) !important;
+    border-radius: var(--radius-medium) !important;
+    color: var(--text-light-strong) !important;
     font-weight: 600;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15), 
-                0 0 12px rgba(255, 255, 255, 0.03),
-                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: var(--shadow-sm);
 }
 
 /* Cache monitor (development only) */
@@ -89,11 +91,11 @@
     position: absolute;
     top: 80px;
     left: 20px;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.8);
+    padding: var(--space-sm);
+    background: var(--glass-accent-strong);
+    border: 1px solid var(--glass-border-light);
+    border-radius: var(--radius-small);
+    color: var(--text-light);
     font-size: 0.7rem;
     z-index: 999;
     display: none;
