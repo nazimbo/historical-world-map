@@ -1,11 +1,14 @@
 class UIController {
-    constructor(periods) {
+    constructor(periods, configService, eventBus) {
         this.periods = periods;
+        this.configService = configService || ConfigurationService.fromGlobalConfig();
+        this.eventBus = eventBus || new EventBus();
+        
         this.currentPeriodIndex = CONSTANTS.UI.DEFAULT_PERIOD_INDEX;
         this.debounceTimeout = null;
         this.onPeriodChange = null;
         this.cacheMonitor = null;
-        this.focusDelay = Utils.getNestedProperty(window.CONFIG, 'ui.focusDelay', CONSTANTS.UI.FOCUS_DELAY);
+        this.focusDelay = this.configService.get('ui.focusDelay', CONSTANTS.UI.FOCUS_DELAY);
         
         // Cache frequently accessed DOM elements
         this.elements = {
@@ -19,6 +22,40 @@ class UIController {
             cacheSize: document.querySelector(CONSTANTS.SELECTORS.CACHE_SIZE),
             cacheHitRate: document.querySelector(CONSTANTS.SELECTORS.CACHE_HIT_RATE)
         };
+        
+        this.setupEventListeners();
+    }
+    
+    setupEventListeners() {
+        // Listen for info panel events
+        this.eventBus.on(this.eventBus.EVENTS.INFO_PANEL_OPENED, (event) => {
+            const { feature, currentPeriod } = event.data;
+            this.showTerritoryInfo(feature, currentPeriod);
+        });
+        
+        this.eventBus.on(this.eventBus.EVENTS.INFO_PANEL_CLOSED, () => {
+            this.hideInfoPanel();
+        });
+        
+        // Listen for loading events
+        this.eventBus.on(this.eventBus.EVENTS.LOADING_SHOWN, () => {
+            this.showLoading();
+        });
+        
+        this.eventBus.on(this.eventBus.EVENTS.LOADING_HIDDEN, () => {
+            this.hideLoading();
+        });
+        
+        // Listen for cache updates
+        this.eventBus.on(this.eventBus.EVENTS.CACHE_UPDATED, (event) => {
+            this.updateCacheMonitor(event.data);
+        });
+        
+        // Listen for period changes to update UI
+        this.eventBus.on(this.eventBus.EVENTS.PERIOD_CHANGED, (event) => {
+            const { periodIndex } = event.data;
+            this.navigateToPeriod(periodIndex);
+        });
     }
 
     initSlider(onInputCallback) {
@@ -50,7 +87,7 @@ class UIController {
         });
     }
 
-    initInfoPanel(onCloseCallback) {
+    initInfoPanel() {
         const { closeButton, infoPanel } = this.elements;
         
         if (!closeButton || !infoPanel) {
@@ -63,9 +100,7 @@ class UIController {
         infoPanel.setAttribute(CONSTANTS.ACCESSIBILITY.ARIA.LIVE, CONSTANTS.ACCESSIBILITY.LIVE_REGIONS.POLITE);
         
         closeButton.addEventListener('click', () => {
-            if (onCloseCallback) {
-                onCloseCallback();
-            }
+            this.eventBus.emit(this.eventBus.EVENTS.INFO_PANEL_CLOSED);
         });
     }
 
@@ -114,7 +149,7 @@ class UIController {
             display: none;
         `;
         
-        const maxCacheSize = Utils.getNestedProperty(window.CONFIG, 'cache.maxSize', CONSTANTS.CACHE.DEFAULT_MAX_SIZE);
+        const maxCacheSize = this.configService.get('cache.maxSize', CONSTANTS.CACHE.DEFAULT_MAX_SIZE);
         monitor.innerHTML = `
             <div>Cache: <span id="cache-size">0</span>/${maxCacheSize}</div>
             <div>Hit rate: <span id="cache-hit-rate">0</span>%</div>

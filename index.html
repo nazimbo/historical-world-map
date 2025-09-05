@@ -99,12 +99,17 @@
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
     
-    <!-- Load order: Constants → Utils → Validators → ErrorHandler → Configuration → Modules → App -->
+    <!-- Load order: Constants → Utils → Validators → ErrorHandler → Configuration → New Services → Modules → App -->
     <script src="js/constants.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/validators.js"></script>
     <script src="js/ErrorHandler.js"></script>
     <script src="config.js"></script>
+    
+    <!-- New Architecture Services -->
+    <script src="js/periodsConfig.js"></script>
+    <script src="js/ConfigurationService.js"></script>
+    <script src="js/EventBus.js"></script>
     
     <!-- Custom JavaScript Modules -->
     <script src="js/DataManager.js"></script>

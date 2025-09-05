@@ -1,8 +1,31 @@
 class ErrorNotification {
-    constructor() {
+    constructor(eventBus, configService) {
+        this.eventBus = eventBus || new EventBus();
+        this.configService = configService || ConfigurationService.fromGlobalConfig();
+        
         this.currentNotification = null;
         this.errorHandler = new ErrorHandler();
-        this.displayTime = Utils.getNestedProperty(window.CONFIG, 'ui.errorDisplayTime', CONSTANTS.UI.ERROR_DISPLAY_TIME);
+        this.displayTime = this.configService.get('ui.errorDisplayTime', CONSTANTS.UI.ERROR_DISPLAY_TIME);
+        
+        this.setupEventListeners();
+    }
+    
+    setupEventListeners() {
+        // Listen for error events
+        this.eventBus.on(this.eventBus.EVENTS.PERIOD_LOAD_ERROR, (event) => {
+            const { error, period } = event.data;
+            this.show(error, period, (retryPeriod) => {
+                const cacheKey = Utils.getCacheKey(retryPeriod);
+                // Emit cache clear event instead of direct call
+                this.eventBus.emit('cache:clearEntry', { cacheKey });
+                // Emit period load request
+                this.eventBus.emit(this.eventBus.EVENTS.PERIOD_CHANGED, { periodIndex: retryPeriod.index });
+            });
+        });
+        
+        this.eventBus.on(this.eventBus.EVENTS.ERROR_CLEARED, () => {
+            this.hide();
+        });
     }
 
     show(error, period, onRetry) {

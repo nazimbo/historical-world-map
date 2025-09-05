@@ -1,18 +1,33 @@
 class DataManager {
-    constructor() {
+    constructor(configService, eventBus) {
+        this.configService = configService || ConfigurationService.fromGlobalConfig();
+        this.eventBus = eventBus || new EventBus();
+        
         this.dataCache = new Map();
-        this.maxCacheSize = Utils.getNestedProperty(window.CONFIG, 'cache.maxSize', CONSTANTS.CACHE.DEFAULT_MAX_SIZE);
-        this.optimizationThreshold = Utils.getNestedProperty(window.CONFIG, 'cache.optimizationThreshold', CONSTANTS.CACHE.DEFAULT_OPTIMIZATION_THRESHOLD);
-        this.coordinatePrecision = Utils.getNestedProperty(window.CONFIG, 'performance.coordinatePrecision', CONSTANTS.DATA.COORDINATE_PRECISION);
+        this.maxCacheSize = this.configService.get('cache.maxSize', CONSTANTS.CACHE.DEFAULT_MAX_SIZE);
+        this.optimizationThreshold = this.configService.get('cache.optimizationThreshold', CONSTANTS.CACHE.DEFAULT_OPTIMIZATION_THRESHOLD);
+        this.coordinatePrecision = this.configService.get('performance.coordinatePrecision', CONSTANTS.DATA.COORDINATE_PRECISION);
+        
         this.cacheStats = {
             hits: 0,
             misses: 0,
             totalBytesLoaded: 0,
             totalLoadTime: 0
         };
+        
         this.preloadQueue = new Set();
         this.isPreloading = false;
         this.errorHandler = new ErrorHandler();
+        
+        this.setupEventListeners();
+    }
+    
+    setupEventListeners() {
+        // Listen for preload requests
+        this.eventBus.on(this.eventBus.EVENTS.DATA_PRELOADED, (event) => {
+            const { periods, currentIndex } = event.data;
+            this.preloadAdjacentPeriods(periods, currentIndex);
+        });
     }
 
     async loadPeriod(period) {
@@ -64,6 +79,9 @@ class DataManager {
             this.cacheStats.totalBytesLoaded += sizeInBytes;
             console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Loaded ${period.label} in ${Math.round(loadTime)}ms (${Utils.formatFileSize(sizeInBytes)})`);
             
+            // Emit cache update event
+            this.eventBus.emit(this.eventBus.EVENTS.CACHE_UPDATED, this.getCacheStats());
+            
             return optimizedData;
             
         } catch (error) {
@@ -105,13 +123,16 @@ class DataManager {
         
         const sizeInBytes = JSON.stringify(data).length;
         console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Cached ${key} (${Utils.formatFileSize(sizeInBytes)}). Cache size: ${this.dataCache.size}/${this.maxCacheSize}`);
+        
+        // Emit cache update event
+        this.eventBus.emit(this.eventBus.EVENTS.CACHE_UPDATED, this.getCacheStats());
     }
 
     async preloadAdjacentPeriods(periods, currentIndex) {
         if (this.isPreloading) return;
         
         this.isPreloading = true;
-        const preloadDistance = Utils.getNestedProperty(window.CONFIG, 'cache.preloadDistance', CONSTANTS.CACHE.DEFAULT_PRELOAD_DISTANCE);
+        const preloadDistance = this.configService.get('cache.preloadDistance', CONSTANTS.CACHE.DEFAULT_PRELOAD_DISTANCE);
         
         const indicesToPreload = [];
         for (let i = 1; i <= preloadDistance; i++) {
@@ -126,7 +147,7 @@ class DataManager {
             if (!this.dataCache.has(cacheKey) && !this.preloadQueue.has(cacheKey)) {
                 this.preloadQueue.add(cacheKey);
                 
-                const delay = Utils.getNestedProperty(window.CONFIG, 'performance.preloadStagger', CONSTANTS.UI.PRELOAD_STAGGER) * Math.abs(currentIndex - index);
+                const delay = this.configService.get('performance.preloadStagger', CONSTANTS.UI.PRELOAD_STAGGER) * Math.abs(currentIndex - index);
                 
                 setTimeout(async () => {
                     if (!this.dataCache.has(cacheKey)) {

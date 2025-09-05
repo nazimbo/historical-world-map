@@ -1,9 +1,45 @@
 class MapRenderer {
-    constructor() {
+    constructor(configService, eventBus) {
+        this.configService = configService || ConfigurationService.fromGlobalConfig();
+        this.eventBus = eventBus || new EventBus();
+        
         this.map = null;
         this.currentLayer = null;
         this.selectedFeature = null;
         this.selectedLayer = null;
+        
+        this.setupEventListeners();
+    }
+    
+    setupEventListeners() {
+        // Listen for map update events
+        this.eventBus.on(this.eventBus.EVENTS.MAP_UPDATED, (event) => {
+            const { data } = event.data;
+            this.updateMapFromEvent(data);
+        });
+        
+        // Listen for selection events
+        this.eventBus.on(this.eventBus.EVENTS.MAP_SELECTION_CLEARED, () => {
+            this.clearSelection();
+        });
+        
+        // Listen for territory interaction events
+        this.eventBus.on(this.eventBus.EVENTS.TERRITORY_HOVERED, (event) => {
+            const { layer } = event.data;
+            this.highlightFeature(layer);
+        });
+        
+        this.eventBus.on(this.eventBus.EVENTS.TERRITORY_UNHOVERED, (event) => {
+            const { layer } = event.data;
+            this.resetHighlight(layer);
+        });
+        
+        this.eventBus.on(this.eventBus.EVENTS.TERRITORY_CLICKED, (event) => {
+            const { feature, layer } = event.data;
+            this.clearSelection();
+            this.setSelectedFeature(feature);
+            this.selectFeature(layer);
+        });
     }
 
     initMap() {
@@ -12,24 +48,22 @@ class MapRenderer {
             L.latLng(...CONSTANTS.MAP.WORLD_BOUNDS.NORTH_EAST)
         );
 
-        const mapConfig = Utils.getNestedProperty(window.CONFIG, 'map', {});
-        
         this.map = L.map(CONSTANTS.SELECTORS.MAP.replace('#', ''), {
-            center: mapConfig.center || CONSTANTS.MAP.DEFAULT_CENTER,
-            zoom: mapConfig.zoom || CONSTANTS.MAP.DEFAULT_ZOOM,
-            minZoom: mapConfig.minZoom || CONSTANTS.MAP.MIN_ZOOM,
-            maxZoom: mapConfig.maxZoom || CONSTANTS.MAP.MAX_ZOOM,
+            center: this.configService.get('map.center', CONSTANTS.MAP.DEFAULT_CENTER),
+            zoom: this.configService.get('map.zoom', CONSTANTS.MAP.DEFAULT_ZOOM),
+            minZoom: this.configService.get('map.minZoom', CONSTANTS.MAP.MIN_ZOOM),
+            maxZoom: this.configService.get('map.maxZoom', CONSTANTS.MAP.MAX_ZOOM),
             worldCopyJump: false,
             maxBounds: worldBounds,
             maxBoundsViscosity: 1.0,
             keyboard: true,
-            keyboardPanDelta: mapConfig.keyboardPanDelta || CONSTANTS.MAP.KEYBOARD_PAN_DELTA
+            keyboardPanDelta: this.configService.get('map.keyboardPanDelta', CONSTANTS.MAP.KEYBOARD_PAN_DELTA)
         });
 
         L.tileLayer(CONSTANTS.TILES.CARTO_LIGHT, {
             attribution: CONSTANTS.TILES.ATTRIBUTION,
             subdomains: CONSTANTS.TILES.SUBDOMAINS,
-            maxZoom: mapConfig.maxZoom || CONSTANTS.MAP.MAX_ZOOM
+            maxZoom: this.configService.get('map.maxZoom', CONSTANTS.MAP.MAX_ZOOM)
         }).addTo(this.map);
 
         L.control.scale({
@@ -77,6 +111,26 @@ class MapRenderer {
         });
 
         this.currentLayer.addTo(this.map);
+    }
+    
+    /**
+     * Update map from event data (used by EventBus)
+     */
+    updateMapFromEvent(geoJsonData) {
+        // Get event handlers from EventHandler (maintains compatibility)
+        const eventHandlers = {
+            onClick: (feature, layer) => {
+                this.eventBus.emit(this.eventBus.EVENTS.TERRITORY_CLICKED, { feature, layer });
+            },
+            onMouseOver: (layer) => {
+                this.eventBus.emit(this.eventBus.EVENTS.TERRITORY_HOVERED, { layer });
+            },
+            onMouseOut: (layer) => {
+                this.eventBus.emit(this.eventBus.EVENTS.TERRITORY_UNHOVERED, { layer });
+            }
+        };
+        
+        this.updateMap(geoJsonData, eventHandlers);
     }
 
     setAccessibilityAttributes(layer, feature) {
