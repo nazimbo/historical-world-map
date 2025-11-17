@@ -75,9 +75,15 @@ class DataManager {
             
             const loadTime = performance.now() - startTime;
             this.cacheStats.totalLoadTime += loadTime;
-            const sizeInBytes = JSON.stringify(optimizedData).length;
-            this.cacheStats.totalBytesLoaded += sizeInBytes;
-            console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Loaded ${period.label} in ${Math.round(loadTime)}ms (${Utils.formatFileSize(sizeInBytes)})`);
+
+            // Only calculate size in development mode for performance
+            if (Utils.isDevelopment()) {
+                const sizeInBytes = JSON.stringify(optimizedData).length;
+                this.cacheStats.totalBytesLoaded += sizeInBytes;
+                console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Loaded ${period.label} in ${Math.round(loadTime)}ms (${Utils.formatFileSize(sizeInBytes)})`);
+            } else {
+                console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Loaded ${period.label} in ${Math.round(loadTime)}ms`);
+            }
             
             // Emit cache update event
             this.eventBus.emit(this.eventBus.EVENTS.CACHE_UPDATED, this.getCacheStats());
@@ -91,12 +97,13 @@ class DataManager {
     }
 
     optimizeGeoJSON(data) {
-        const dataSize = JSON.stringify(data).length;
-        if (dataSize < this.optimizationThreshold) {
+        // Estimate size without expensive JSON.stringify - based on features and coordinates count
+        const estimatedSize = this.estimateGeoJSONSize(data);
+        if (estimatedSize < this.optimizationThreshold) {
             return data;
         }
-        
-        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Optimizing GeoJSON data (${Utils.formatFileSize(dataSize)})`);
+
+        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Optimizing GeoJSON data (estimated ${Utils.formatFileSize(estimatedSize)})`);
         
         return {
             ...data,
@@ -111,6 +118,48 @@ class DataManager {
         };
     }
 
+    /**
+     * Estimate GeoJSON size without expensive JSON.stringify
+     * Based on feature count and coordinate counts for faster performance
+     */
+    estimateGeoJSONSize(data) {
+        if (!data || !data.features) return 0;
+
+        let totalSize = 100; // Base object overhead
+
+        data.features.forEach(feature => {
+            // Base feature overhead (~200 bytes)
+            totalSize += 200;
+
+            // Estimate coordinates size (each coordinate pair ~16 bytes as string)
+            const coordCount = this.countCoordinates(feature.geometry?.coordinates || []);
+            totalSize += coordCount * 16;
+
+            // Properties overhead (rough estimate based on key count)
+            if (feature.properties) {
+                totalSize += Object.keys(feature.properties).length * 50;
+            }
+        });
+
+        return totalSize;
+    }
+
+    /**
+     * Recursively count coordinates in nested arrays
+     */
+    countCoordinates(coords) {
+        if (!Array.isArray(coords)) return 0;
+        if (coords.length === 0) return 0;
+
+        // Base case: coordinate pair [lon, lat]
+        if (typeof coords[0] === 'number') {
+            return 1;
+        }
+
+        // Recursive case: array of coordinate arrays
+        return coords.reduce((sum, c) => sum + this.countCoordinates(c), 0);
+    }
+
     addToCache(key, data) {
         // LRU eviction
         if (this.dataCache.size >= this.maxCacheSize) {
@@ -120,9 +169,14 @@ class DataManager {
         }
         
         this.dataCache.set(key, data);
-        
-        const sizeInBytes = JSON.stringify(data).length;
-        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Cached ${key} (${Utils.formatFileSize(sizeInBytes)}). Cache size: ${this.dataCache.size}/${this.maxCacheSize}`);
+
+        // Only calculate size in development mode for performance
+        if (Utils.isDevelopment()) {
+            const sizeInBytes = JSON.stringify(data).length;
+            console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Cached ${key} (${Utils.formatFileSize(sizeInBytes)}). Cache size: ${this.dataCache.size}/${this.maxCacheSize}`);
+        } else {
+            console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Cached ${key}. Cache size: ${this.dataCache.size}/${this.maxCacheSize}`);
+        }
         
         // Emit cache update event
         this.eventBus.emit(this.eventBus.EVENTS.CACHE_UPDATED, this.getCacheStats());

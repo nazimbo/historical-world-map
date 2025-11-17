@@ -6,7 +6,7 @@
 const CONSTANTS = {
     // Cache configuration
     CACHE: {
-        DEFAULT_MAX_SIZE: 15,
+        DEFAULT_MAX_SIZE: 25, // Increased from 15 for better cache hit rate (48% coverage of 52 periods)
         DEFAULT_PRELOAD_DISTANCE: 2,
         DEFAULT_OPTIMIZATION_THRESHOLD: 500000, // 500KB
         LRU_EVICTION: true

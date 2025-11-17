@@ -18,12 +18,12 @@
     --text-light-strong: rgba(255, 255, 255, 0.95);
     --text-white: white;
     
-    /* Blur effects */
-    --blur-light: blur(12px);
-    --blur-medium: blur(16px);
-    --blur-heavy: blur(20px);
-    --blur-extra: blur(24px);
-    --blur-super: blur(28px);
+    /* Blur effects - Reduced for better performance (Phase 1 optimization) */
+    --blur-light: blur(8px);    /* was 12px */
+    --blur-medium: blur(12px);  /* was 16px */
+    --blur-heavy: blur(16px);   /* was 20px */
+    --blur-extra: blur(20px);   /* was 24px */
+    --blur-super: blur(24px);   /* was 28px */
     
     /* Border radius */
     --radius-small: 8px;
@@ -67,13 +67,18 @@
     box-sizing: border-box;
 }
 
-/* Accessibility improvements */
+/* Accessibility improvements - Respect user motion preferences */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* Pause animations when info panel is hidden to save GPU */
+.info-panel.hidden ~ #map .territory-selected {
+    animation-play-state: paused;
 }
 
 /* Focus indicators */
@@ -133,6 +138,24 @@ body {
 
 .hidden {
     display: none;
+}
+
+/* Mobile performance optimizations - Disable expensive backdrop-filter on smaller devices */
+@media (max-width: 768px) {
+    .time-controls, .info-panel, .loading, .error-notification {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        -moz-backdrop-filter: none !important;
+    }
+
+    /* Compensate with slightly more opaque backgrounds */
+    .time-controls {
+        background: rgba(0, 0, 0, 0.85);
+    }
+
+    .info-panel {
+        background: rgba(0, 0, 0, 0.9);
+    }
 }
 
 /* iOS-specific improvements */

@@ -12,13 +12,22 @@
 }
 
 .territory-selected {
-    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(255, 215, 0, 0.6));
+    /* Static shadow - no longer animated for performance */
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 20px rgba(255, 215, 0, 0.7));
+    /* Use transform instead of filter animation for better performance */
     animation: selectedPulse 2s ease-in-out infinite;
+    will-change: transform, opacity;
 }
 
 @keyframes selectedPulse {
-    0%, 100% { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 16px rgba(255, 215, 0, 0.6)); }
-    50% { filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 24px rgba(255, 215, 0, 0.8)); }
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.015);
+        opacity: 0.92;
+    }
 }
 
 /* Custom map popup styles */
