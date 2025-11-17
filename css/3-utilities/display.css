@@ -1,0 +1,119 @@
+/**
+ * Utilities - Display
+ * Display, visibility, and state utilities
+ */
+
+/* ===== DISPLAY UTILITIES ===== */
+
+.u-block {
+    display: block;
+}
+
+.u-inline {
+    display: inline;
+}
+
+.u-inline-block {
+    display: inline-block;
+}
+
+.u-flex {
+    display: flex;
+}
+
+.u-inline-flex {
+    display: inline-flex;
+}
+
+.u-grid {
+    display: grid;
+}
+
+.u-inline-grid {
+    display: inline-grid;
+}
+
+.u-hidden {
+    display: none;
+}
+
+/* Legacy support */
+.hidden {
+    display: none;
+}
+
+/* ===== STATE CLASSES ===== */
+
+.is-hidden {
+    display: none !important;
+}
+
+.is-visible {
+    display: block !important;
+}
+
+.is-loading {
+    pointer-events: none;
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.is-disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.is-active {
+    /* Component-specific styling */
+}
+
+.is-selected {
+    /* Component-specific styling */
+}
+
+/* ===== VISIBILITY ===== */
+
+.u-invisible {
+    visibility: hidden;
+}
+
+.u-visible {
+    visibility: visible;
+}
+
+/* ===== OPACITY ===== */
+
+.u-opacity-0 {
+    opacity: 0;
+}
+
+.u-opacity-50 {
+    opacity: 0.5;
+}
+
+.u-opacity-100 {
+    opacity: 1;
+}
+
+/* ===== OVERFLOW ===== */
+
+.u-overflow-hidden {
+    overflow: hidden;
+}
+
+.u-overflow-auto {
+    overflow: auto;
+}
+
+.u-overflow-scroll {
+    overflow: scroll;
+}
+
+.u-overflow-x-hidden {
+    overflow-x: hidden;
+}
+
+.u-overflow-y-auto {
+    overflow-y: auto;
+}

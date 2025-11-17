@@ -1,0 +1,145 @@
+/**
+ * Design Tokens - Motion
+ * Animation durations, easing functions, and transitions
+ */
+
+:root {
+    /* ===== ANIMATION DURATIONS ===== */
+    --duration-instant: 0ms;
+    --duration-fast: 150ms;
+    --duration-base: 200ms;
+    --duration-medium: 300ms;
+    --duration-slow: 500ms;
+    --duration-slower: 700ms;
+    --duration-slowest: 1000ms;
+
+    /* ===== EASING FUNCTIONS ===== */
+    /* Standard easing curves */
+    --ease-linear: linear;
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Custom easing curves */
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-elastic: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+
+    /* ===== COMMON TRANSITIONS ===== */
+    /* Predefined transitions for common use cases */
+    --transition-base: all var(--duration-base) var(--ease-out);
+    --transition-fast: all var(--duration-fast) var(--ease-out);
+    --transition-slow: all var(--duration-slow) var(--ease-out);
+
+    /* Property-specific transitions */
+    --transition-colors:
+        background-color var(--duration-base) var(--ease-out),
+        color var(--duration-base) var(--ease-out),
+        border-color var(--duration-base) var(--ease-out);
+
+    --transition-transform: transform var(--duration-base) var(--ease-out);
+    --transition-opacity: opacity var(--duration-base) var(--ease-out);
+    --transition-shadow: box-shadow var(--duration-medium) var(--ease-out);
+
+    /* Combined transitions */
+    --transition-interactive:
+        background-color var(--duration-base) var(--ease-out),
+        transform var(--duration-base) var(--ease-out),
+        box-shadow var(--duration-base) var(--ease-out);
+}
+
+/* ===== KEYFRAME ANIMATIONS ===== */
+
+/* Rotating globe animation */
+@keyframes rotate-globe {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Spinner animation */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Globe with offset rotate */
+@keyframes globe-rotate {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Subtle pulse animation */
+@keyframes subtle-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.85;
+    }
+}
+
+/* Selected territory pulse */
+@keyframes selected-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.015);
+        opacity: 0.92;
+    }
+}
+
+/* Slide in with scale */
+@keyframes slide-in-scale {
+    from {
+        transform: translate(-50%, -50%) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Thumb pulse */
+@keyframes thumb-pulse {
+    0% {
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+    100% {
+        box-shadow: 0 0 40px rgba(255, 255, 255, 0.4);
+    }
+}
+
+/* Fade in */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Fade out */
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}

@@ -1,0 +1,97 @@
+/**
+ * Design Tokens - Colors
+ * Centralized color definitions for the entire application
+ */
+
+:root {
+    /* ===== PRIMARY COLORS ===== */
+    --color-primary: #667eea;
+    --color-primary-light: #7c8ff0;
+    --color-primary-dark: #5568d3;
+
+    --color-secondary: #764ba2;
+    --color-secondary-light: #8b5fb8;
+    --color-secondary-dark: #61378d;
+
+    /* ===== ACCENT COLORS ===== */
+    --color-accent: #f39c12;
+    --color-accent-hover: #e67e22;
+
+    /* ===== NEUTRAL PALETTE ===== */
+    /* White-based opacity scale (for use on dark backgrounds) */
+    --color-white: #ffffff;
+    --color-black: #000000;
+
+    --color-neutral-0: rgba(255, 255, 255, 0);
+    --color-neutral-50: rgba(255, 255, 255, 0.05);
+    --color-neutral-100: rgba(255, 255, 255, 0.1);
+    --color-neutral-150: rgba(255, 255, 255, 0.15);
+    --color-neutral-200: rgba(255, 255, 255, 0.2);
+    --color-neutral-250: rgba(255, 255, 255, 0.25);
+    --color-neutral-300: rgba(255, 255, 255, 0.3);
+    --color-neutral-400: rgba(255, 255, 255, 0.4);
+    --color-neutral-500: rgba(255, 255, 255, 0.5);
+    --color-neutral-600: rgba(255, 255, 255, 0.6);
+    --color-neutral-700: rgba(255, 255, 255, 0.7);
+    --color-neutral-800: rgba(255, 255, 255, 0.8);
+    --color-neutral-850: rgba(255, 255, 255, 0.85);
+    --color-neutral-900: rgba(255, 255, 255, 0.9);
+    --color-neutral-950: rgba(255, 255, 255, 0.95);
+    --color-neutral-980: rgba(255, 255, 255, 0.98);
+
+    /* Black-based opacity scale (for use on light backgrounds) */
+    --color-dark-50: rgba(0, 0, 0, 0.05);
+    --color-dark-100: rgba(0, 0, 0, 0.1);
+    --color-dark-150: rgba(0, 0, 0, 0.15);
+    --color-dark-200: rgba(0, 0, 0, 0.2);
+    --color-dark-250: rgba(0, 0, 0, 0.25);
+    --color-dark-300: rgba(0, 0, 0, 0.3);
+    --color-dark-400: rgba(0, 0, 0, 0.4);
+    --color-dark-500: rgba(0, 0, 0, 0.5);
+    --color-dark-600: rgba(0, 0, 0, 0.6);
+    --color-dark-700: rgba(0, 0, 0, 0.7);
+    --color-dark-800: rgba(0, 0, 0, 0.8);
+    --color-dark-850: rgba(0, 0, 0, 0.85);
+    --color-dark-900: rgba(0, 0, 0, 0.9);
+
+    /* ===== SEMANTIC TEXT COLORS ===== */
+    --text-primary: #1a1a1a;
+    --text-on-glass: rgba(255, 255, 255, 0.95);
+    --text-on-glass-muted: rgba(255, 255, 255, 0.8);
+    --text-white: #ffffff;
+
+    /* ===== STATUS COLORS ===== */
+    --color-error: #dc3545;
+    --color-error-light: #e76370;
+    --color-error-dark: #c82333;
+
+    --color-success: #28a745;
+    --color-success-light: #48c965;
+    --color-success-dark: #1e7e34;
+
+    --color-warning: #ffc107;
+    --color-warning-light: #ffd451;
+    --color-warning-dark: #e0a800;
+
+    --color-info: #17a2b8;
+    --color-info-light: #3db9cf;
+    --color-info-dark: #117a8b;
+
+    /* ===== MAP-SPECIFIC COLORS ===== */
+    --color-map-territory: #3498db;
+    --color-map-territory-hover: #5dade2;
+    --color-map-territory-selected: #f39c12;
+    --color-map-unknown: #95a5a6;
+    --color-map-border: rgba(255, 255, 255, 0.8);
+
+    /* ===== BACKGROUND GRADIENT ===== */
+    --bg-gradient-start: #667eea;
+    --bg-gradient-end: #764ba2;
+}
+
+/* Dark mode support (future-proofing) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Override specific tokens for dark mode if needed */
+    }
+}

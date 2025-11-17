@@ -1,0 +1,125 @@
+/**
+ * Base Styles - Accessibility
+ * Focus states, screen reader utilities, and accessibility improvements
+ */
+
+/* ===== FOCUS STATES ===== */
+
+/* Remove default focus outline */
+*:focus {
+    outline: none;
+}
+
+/* Add custom focus outline for keyboard navigation */
+*:focus-visible {
+    outline: 2px solid var(--color-neutral-900);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* Focus within (for containers) */
+*:focus-within {
+    /* Can be used for custom focus indicators on containers */
+}
+
+/* ===== SCREEN READER ONLY ===== */
+
+/* Visually hidden but accessible to screen readers */
+.sr-only,
+.u-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Allow screen reader only element to be focusable */
+.sr-only-focusable:focus,
+.u-sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* ===== SKIP LINKS ===== */
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--color-white);
+    color: var(--text-primary);
+    padding: var(--space-2) var(--space-4);
+    text-decoration: none;
+    border-radius: var(--radius-base);
+    z-index: var(--z-maximum);
+}
+
+.skip-link:focus {
+    top: var(--space-2);
+    left: var(--space-2);
+}
+
+/* ===== REDUCED MOTION ===== */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+
+/* Support for Windows High Contrast mode */
+@media (prefers-contrast: high) {
+    * {
+        border-color: currentColor !important;
+    }
+}
+
+/* ===== INTERACTIVE ELEMENTS ===== */
+
+/* Ensure interactive elements are keyboard accessible */
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+    cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* ===== FOCUS TRAP ===== */
+
+/* For modals and dialogs */
+.focus-trap {
+    position: relative;
+}
+
+/* ===== ARIA LIVE REGIONS ===== */
+
+[aria-live="polite"],
+[aria-live="assertive"] {
+    /* Screen readers will announce content changes */
+}

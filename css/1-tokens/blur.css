@@ -1,0 +1,16 @@
+/**
+ * Design Tokens - Blur
+ * Backdrop-filter blur levels for glass-morphism effects
+ */
+
+:root {
+    /* ===== BLUR LEVELS ===== */
+    --blur-none: 0;
+    --blur-sm: blur(4px);
+    --blur-base: blur(8px);
+    --blur-md: blur(12px);
+    --blur-lg: blur(16px);
+    --blur-xl: blur(20px);
+    --blur-2xl: blur(24px);
+    --blur-3xl: blur(28px);
+}

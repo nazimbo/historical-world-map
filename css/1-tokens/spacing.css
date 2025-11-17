@@ -1,0 +1,57 @@
+/**
+ * Design Tokens - Spacing
+ * Consistent spacing scale based on 4px (0.25rem) base unit
+ */
+
+:root {
+    /* ===== SPACING SCALE ===== */
+    /* 4px base unit, exponential growth */
+    --space-0: 0;
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-7: 1.75rem;   /* 28px */
+    --space-8: 2rem;      /* 32px */
+    --space-9: 2.25rem;   /* 36px */
+    --space-10: 2.5rem;   /* 40px */
+    --space-11: 2.75rem;  /* 44px */
+    --space-12: 3rem;     /* 48px */
+    --space-14: 3.5rem;   /* 56px */
+    --space-16: 4rem;     /* 64px */
+    --space-20: 5rem;     /* 80px */
+    --space-24: 6rem;     /* 96px */
+    --space-28: 7rem;     /* 112px */
+    --space-32: 8rem;     /* 128px */
+
+    /* ===== SAFE AREA INSETS ===== */
+    /* For devices with notches, rounded corners, etc. */
+    --safe-top: env(safe-area-inset-top, 0);
+    --safe-right: env(safe-area-inset-right, 0);
+    --safe-bottom: env(safe-area-inset-bottom, 0);
+    --safe-left: env(safe-area-inset-left, 0);
+
+    /* ===== COMMON SPACING PATTERNS ===== */
+    /* Component-specific spacing can reference these */
+    --spacing-component-padding: var(--space-5);
+    --spacing-component-gap: var(--space-4);
+    --spacing-section-gap: var(--space-8);
+    --spacing-page-margin: var(--space-5);
+}
+
+/* Responsive spacing adjustments */
+@media (max-width: 768px) {
+    :root {
+        --spacing-component-padding: var(--space-4);
+        --spacing-page-margin: var(--space-3);
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --spacing-component-padding: var(--space-3);
+        --spacing-page-margin: var(--space-2);
+    }
+}

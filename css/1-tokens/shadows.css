@@ -1,0 +1,59 @@
+/**
+ * Design Tokens - Shadows
+ * Elevation system for box shadows and text shadows
+ */
+
+:root {
+    /* ===== BOX SHADOWS ===== */
+    /* Elevation levels 0-5 for standard components */
+    --shadow-0: none;
+    --shadow-1: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-4: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-5: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+    /* ===== GLASS-MORPHISM SHADOWS ===== */
+    /* Special shadows for glass components with inset highlights */
+    --shadow-glass-sm:
+        0 6px 24px rgba(0, 0, 0, 0.15),
+        0 0 12px rgba(255, 255, 255, 0.03),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    --shadow-glass-md:
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        0 0 16px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    --shadow-glass-lg:
+        0 12px 40px rgba(0, 0, 0, 0.2),
+        0 0 20px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    --shadow-glass-xl:
+        0 12px 40px rgba(0, 0, 0, 0.25),
+        0 0 20px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    /* ===== TEXT SHADOWS ===== */
+    /* For text on glass backgrounds */
+    --text-shadow-none: none;
+    --text-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+    --text-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.6);
+    --text-shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.8);
+    --text-shadow-xl: 0 2px 8px rgba(0, 0, 0, 0.8),
+                      0 0 16px rgba(255, 255, 255, 0.7);
+
+    /* ===== DROP SHADOWS (for SVG and filters) ===== */
+    /* Used for map territories and special effects */
+    --drop-shadow-sm: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+    --drop-shadow-md: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+    --drop-shadow-lg: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+
+    /* Special glow effects */
+    --drop-shadow-glow: drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
+    --drop-shadow-glow-accent: drop-shadow(0 0 20px rgba(255, 215, 0, 0.7));
+}

@@ -1,0 +1,55 @@
+/**
+ * Design Tokens - Z-Index
+ * Centralized z-index scale for consistent stacking contexts
+ */
+
+:root {
+    /* ===== Z-INDEX SCALE ===== */
+    /* Base level */
+    --z-base: 0;
+    --z-below: -1;
+
+    /* Content layers */
+    --z-content: 10;
+    --z-content-overlay: 20;
+
+    /* Navigation and UI controls */
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-header: 400;
+
+    /* Overlays and modals */
+    --z-overlay: 500;
+    --z-modal-backdrop: 600;
+    --z-modal: 700;
+
+    /* Notifications and popovers */
+    --z-popover: 800;
+    --z-notification: 900;
+    --z-tooltip: 1000;
+
+    /* Always on top */
+    --z-maximum: 9999;
+}
+
+/**
+ * Z-Index Usage Guide:
+ *
+ * --z-base (0): Default stacking, map container
+ * --z-content (10): Map features, territories
+ * --z-fixed (300): Positioned UI panels (header, footer, controls, info panel)
+ * --z-modal (700): Modal dialogs, error notifications
+ * --z-tooltip (1000): Tooltips, always visible hints
+ *
+ * Components in this app:
+ * - Map container: z-base (0)
+ * - Map territories: z-content (10)
+ * - Header: z-fixed (300)
+ * - Footer: z-fixed (300)
+ * - Time controls: z-fixed (300)
+ * - Info panel: z-fixed (300)
+ * - Loading indicator: z-fixed (300)
+ * - Error notification: z-modal (700)
+ * - Leaflet controls: z-fixed (300)
+ */

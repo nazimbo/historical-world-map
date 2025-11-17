@@ -1,0 +1,37 @@
+/**
+ * Design Tokens - Borders
+ * Border radius, width, and style definitions
+ */
+
+:root {
+    /* ===== BORDER RADIUS ===== */
+    --radius-none: 0;
+    --radius-sm: 0.25rem;    /* 4px */
+    --radius-base: 0.5rem;   /* 8px */
+    --radius-md: 0.75rem;    /* 12px */
+    --radius-lg: 1rem;       /* 16px */
+    --radius-xl: 1.25rem;    /* 20px */
+    --radius-2xl: 1.5rem;    /* 24px */
+    --radius-3xl: 2rem;      /* 32px */
+    --radius-full: 9999px;   /* Fully rounded (pills, circles) */
+
+    /* ===== BORDER WIDTHS ===== */
+    --border-0: 0;
+    --border-1: 1px;
+    --border-2: 2px;
+    --border-3: 3px;
+    --border-4: 4px;
+    --border-8: 8px;
+
+    /* ===== BORDER STYLES ===== */
+    /* Commonly used border combinations */
+    --border-glass-light: 1px solid rgba(255, 255, 255, 0.1);
+    --border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+    --border-glass-heavy: 1px solid rgba(255, 255, 255, 0.25);
+
+    --border-solid-light: 1px solid rgba(255, 255, 255, 0.2);
+    --border-solid-medium: 1px solid rgba(255, 255, 255, 0.3);
+
+    /* Dashed borders */
+    --border-dashed: 3px dashed rgba(255, 255, 255, 1);
+}

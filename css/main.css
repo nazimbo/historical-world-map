@@ -1,0 +1,75 @@
+/**
+ * Main CSS Import Orchestrator
+ * Imports all CSS modules in the correct order
+ *
+ * Phase 1: Design System Foundation
+ * - This file establishes the new design token system
+ * - Old styles are preserved temporarily for compatibility
+ */
+
+/* ===== 0. RESET ===== */
+@import './0-reset/reset.css';
+
+/* ===== 1. DESIGN TOKENS ===== */
+@import './1-tokens/colors.css';
+@import './1-tokens/typography.css';
+@import './1-tokens/spacing.css';
+@import './1-tokens/shadows.css';
+@import './1-tokens/borders.css';
+@import './1-tokens/blur.css';
+@import './1-tokens/motion.css';
+@import './1-tokens/z-index.css';
+
+/* ===== 2. BASE STYLES ===== */
+@import './2-base/document.css';
+@import './2-base/typography.css';
+@import './2-base/accessibility.css';
+
+/* ===== 3. UTILITIES ===== */
+@import './3-utilities/glass.css';
+@import './3-utilities/display.css';
+@import './3-utilities/text.css';
+
+/* ===== LEGACY STYLES (Temporary - Phase 1) ===== */
+/* These will be refactored in subsequent phases */
+/* DO NOT EDIT - Use new design tokens and utilities instead */
+
+/* Legacy variable mappings (bridges old and new design tokens) */
+@import './base.css';
+
+/* Legacy components.css (minus base reset which we replaced) */
+@import './components.css';
+
+/* Legacy layout.css */
+@import './layout.css';
+
+/* Legacy map.css */
+@import './map.css';
+
+/* Legacy responsive.css */
+@import './responsive.css';
+
+/**
+ * Migration Notes:
+ *
+ * Phase 1 (CURRENT):
+ * - Design tokens established
+ * - Modern reset applied
+ * - Utility classes available
+ * - Legacy styles preserved for compatibility
+ *
+ * Phase 2 (NEXT):
+ * - Migrate components to use new utilities
+ * - Replace inline glass styles with .u-glass classes
+ * - Replace .hidden with .is-hidden
+ *
+ * Phase 3:
+ * - Refactor all components to BEM naming
+ * - Remove legacy CSS files
+ * - Create new component modules
+ *
+ * Phase 4:
+ * - Optimize responsive design
+ * - Performance enhancements
+ * - Final cleanup
+ */

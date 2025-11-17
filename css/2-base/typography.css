@@ -1,0 +1,86 @@
+/**
+ * Base Styles - Typography
+ * Default typography rules and text elements
+ */
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-weight: var(--font-semibold);
+    line-height: var(--leading-tight);
+    color: inherit;
+}
+
+h1 {
+    font-size: var(--text-2xl);
+}
+
+h2 {
+    font-size: var(--text-xl);
+}
+
+h3 {
+    font-size: var(--text-lg);
+}
+
+h4 {
+    font-size: var(--text-md);
+}
+
+h5 {
+    font-size: var(--text-base);
+}
+
+h6 {
+    font-size: var(--text-sm);
+}
+
+/* Paragraphs */
+p {
+    margin: 0 0 1em 0;
+}
+
+p:last-child {
+    margin-bottom: 0;
+}
+
+/* Links */
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: var(--transition-colors);
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Strong and emphasis */
+strong, b {
+    font-weight: var(--font-bold);
+}
+
+em, i {
+    font-style: italic;
+}
+
+/* Small text */
+small {
+    font-size: var(--text-sm);
+}
+
+/* Code */
+code, kbd, samp {
+    font-family: var(--font-family-mono);
+    font-size: 0.9em;
+}
+
+/* Lists */
+ul, ol {
+    margin: 0;
+    padding: 0;
+}
+
+li {
+    margin: 0;
+}
