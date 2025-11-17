@@ -1,0 +1,139 @@
+# Nginx Server Configuration Example for Historical World Map
+# Performance optimizations for serving compressed assets
+#
+# Usage: Place this in your nginx.conf or include it in your server block
+# Location: /etc/nginx/sites-available/historical-world-map
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-domain.com;
+
+    # Document root
+    root /path/to/historical-world-map;
+    index index.html;
+
+    # GZip Compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types
+        text/plain
+        text/css
+        text/javascript
+        text/xml
+        application/javascript
+        application/x-javascript
+        application/json
+        application/geo+json
+        application/xml
+        application/xhtml+xml
+        application/rss+xml
+        application/atom+xml
+        image/svg+xml
+        font/truetype
+        font/opentype
+        application/vnd.ms-fontobject;
+    gzip_min_length 1000;
+    gzip_disable "msie6";
+
+    # Brotli Compression (if nginx compiled with brotli module)
+    # Uncomment if available - better compression than gzip
+    # brotli on;
+    # brotli_comp_level 6;
+    # brotli_types text/plain text/css text/javascript application/javascript application/json application/geo+json;
+
+    # Cache Control Headers
+    location ~* \.(css|js|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # GeoJSON data - cache for 1 week
+    location ~* \.geojson$ {
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+        # CORS headers for GeoJSON
+        add_header Access-Control-Allow-Origin "*";
+        add_header Access-Control-Allow-Methods "GET, OPTIONS";
+        add_header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept";
+    }
+
+    # HTML files - no cache
+    location ~* \.(html|htm)$ {
+        expires -1;
+        add_header Cache-Control "no-cache, must-revalidate";
+    }
+
+    # Images - cache for 1 month
+    location ~* \.(jpg|jpeg|png|gif|ico|webp)$ {
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+        access_log off;
+    }
+
+    # Service Worker - special handling
+    location = /sw.js {
+        expires off;
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+    }
+
+    # Security Headers
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Content Security Policy
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.cartocdn.com https://*.openstreetmap.org; font-src 'self'; frame-ancestors 'none';" always;
+
+    # Main location block
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Data directory
+    location /data/ {
+        try_files $uri =404;
+    }
+
+    # Prevent access to hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    # Logging
+    access_log /var/log/nginx/historical-world-map-access.log;
+    error_log /var/log/nginx/historical-world-map-error.log warn;
+}
+
+# HTTPS Configuration (recommended for production)
+# server {
+#     listen 443 ssl http2;
+#     listen [::]:443 ssl http2;
+#     server_name your-domain.com;
+#
+#     # SSL Certificates
+#     ssl_certificate /path/to/fullchain.pem;
+#     ssl_certificate_key /path/to/privkey.pem;
+#
+#     # SSL Configuration
+#     ssl_protocols TLSv1.2 TLSv1.3;
+#     ssl_ciphers HIGH:!aNULL:!MD5;
+#     ssl_prefer_server_ciphers on;
+#
+#     # ... rest of configuration same as above ...
+# }
+
+# HTTP to HTTPS redirect
+# server {
+#     listen 80;
+#     listen [::]:80;
+#     server_name your-domain.com;
+#     return 301 https://$server_name$request_uri;
+# }

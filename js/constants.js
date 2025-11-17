@@ -6,7 +6,7 @@
 const CONSTANTS = {
     // Cache configuration
     CACHE: {
-        DEFAULT_MAX_SIZE: 15,
+        DEFAULT_MAX_SIZE: 25, // Increased from 15 for better cache hit rate (48% coverage of 52 periods)
         DEFAULT_PRELOAD_DISTANCE: 2,
         DEFAULT_OPTIMIZATION_THRESHOLD: 500000, // 500KB
         LRU_EVICTION: true
@@ -39,6 +39,7 @@ const CONSTANTS = {
     // Data processing
     DATA: {
         COORDINATE_PRECISION: 6,
+        SIMPLIFICATION_TOLERANCE: 0.0001, // Douglas-Peucker tolerance (Phase 2 optimization)
         MIN_VALID_PROPERTIES: 1,
         GEOJSON_REQUIRED_PROPS: ['type', 'features']
     },

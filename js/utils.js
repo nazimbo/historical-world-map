@@ -61,18 +61,117 @@ class Utils {
     }
 
     /**
-     * Simplify coordinates to specified precision
+     * Simplify coordinates using Douglas-Peucker algorithm and precision rounding
+     * Phase 2 optimization: Removes unnecessary points while preserving shape
      * @param {Array} coords - Coordinate array
-     * @param {number} precision - Decimal places
+     * @param {number} precision - Decimal places (default: 6)
+     * @param {number} tolerance - Simplification tolerance (default: 0.0001)
      * @returns {Array} Simplified coordinates
      */
-    static simplifyCoordinates(coords, precision) {
+    static simplifyCoordinates(coords, precision = 6, tolerance = 0.0001) {
         if (typeof coords[0] === 'number') {
-            return coords.map(c => 
+            // Base case: single coordinate pair [lon, lat]
+            return coords.map(c =>
                 Math.round(c * Math.pow(10, precision)) / Math.pow(10, precision)
             );
         }
-        return coords.map(c => this.simplifyCoordinates(c, precision));
+
+        if (Array.isArray(coords[0]) && typeof coords[0][0] === 'number') {
+            // Array of coordinate pairs - apply Douglas-Peucker then round
+            const simplified = this.douglasPeucker(coords, tolerance);
+            return simplified.map(coord => this.simplifyCoordinates(coord, precision));
+        }
+
+        // Nested arrays (Polygon, MultiPolygon, etc.) - recurse
+        return coords.map(c => this.simplifyCoordinates(c, precision, tolerance));
+    }
+
+    /**
+     * Douglas-Peucker algorithm for line simplification
+     * Reduces number of points in a polyline while preserving shape
+     * @param {Array} points - Array of [lon, lat] coordinates
+     * @param {number} tolerance - Maximum distance from simplified line
+     * @returns {Array} Simplified array of coordinates
+     */
+    static douglasPeucker(points, tolerance) {
+        if (!points || points.length <= 2) {
+            return points;
+        }
+
+        const end = points.length - 1;
+        let maxDist = 0;
+        let maxIndex = 0;
+
+        // Find point with maximum distance from line
+        for (let i = 1; i < end; i++) {
+            const dist = this.perpendicularDistance(
+                points[i],
+                points[0],
+                points[end]
+            );
+            if (dist > maxDist) {
+                maxDist = dist;
+                maxIndex = i;
+            }
+        }
+
+        // If max distance is greater than tolerance, recursively simplify
+        if (maxDist > tolerance) {
+            // Recursively simplify both segments
+            const left = this.douglasPeucker(points.slice(0, maxIndex + 1), tolerance);
+            const right = this.douglasPeucker(points.slice(maxIndex), tolerance);
+
+            // Combine results (remove duplicate middle point)
+            return [...left.slice(0, -1), ...right];
+        }
+
+        // All points are within tolerance, return only endpoints
+        return [points[0], points[end]];
+    }
+
+    /**
+     * Calculate perpendicular distance from point to line segment
+     * @param {Array} point - [lon, lat] coordinate
+     * @param {Array} lineStart - [lon, lat] start of line
+     * @param {Array} lineEnd - [lon, lat] end of line
+     * @returns {number} Perpendicular distance
+     */
+    static perpendicularDistance(point, lineStart, lineEnd) {
+        const [x, y] = point;
+        const [x1, y1] = lineStart;
+        const [x2, y2] = lineEnd;
+
+        const A = x - x1;
+        const B = y - y1;
+        const C = x2 - x1;
+        const D = y2 - y1;
+
+        const dot = A * C + B * D;
+        const lenSq = C * C + D * D;
+
+        // Find closest point on line segment
+        let param = -1;
+        if (lenSq !== 0) {
+            param = dot / lenSq;
+        }
+
+        let xx, yy;
+
+        if (param < 0) {
+            xx = x1;
+            yy = y1;
+        } else if (param > 1) {
+            xx = x2;
+            yy = y2;
+        } else {
+            xx = x1 + param * C;
+            yy = y1 + param * D;
+        }
+
+        const dx = x - xx;
+        const dy = y - yy;
+
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     /**

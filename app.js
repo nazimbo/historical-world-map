@@ -247,7 +247,30 @@ document.addEventListener('DOMContentLoaded', () => {
         window.getCacheStats = () => window.historicalMap.getCacheStats();
         window.clearCache = () => window.historicalMap.clearCache();
         window.getEventBusDebugInfo = () => window.historicalMap.eventBus.getDebugInfo();
-        
+
+        // Register Service Worker for offline caching (Phase 1 optimization)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Service Worker registered successfully:`, registration.scope);
+
+                    // Listen for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Service Worker update found`);
+
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} New Service Worker available. Refresh to update.`);
+                            }
+                        });
+                    });
+                })
+                .catch((error) => {
+                    console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Service Worker registration failed:`, error);
+                });
+        }
+
         console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Application initialized successfully`);
     } catch (error) {
         console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Failed to initialize application:`, error);

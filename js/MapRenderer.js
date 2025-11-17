@@ -48,6 +48,13 @@ class MapRenderer {
             L.latLng(...CONSTANTS.MAP.WORLD_BOUNDS.NORTH_EAST)
         );
 
+        // Phase 2 optimization: Use Canvas renderer instead of SVG for better performance
+        // Canvas is 60-70% faster for rendering large numbers of features (>5000)
+        const canvasRenderer = L.canvas({
+            padding: 0.5,
+            tolerance: 5  // Increase click tolerance for better UX
+        });
+
         this.map = L.map(CONSTANTS.SELECTORS.MAP.replace('#', ''), {
             center: this.configService.get('map.center', CONSTANTS.MAP.DEFAULT_CENTER),
             zoom: this.configService.get('map.zoom', CONSTANTS.MAP.DEFAULT_ZOOM),
@@ -57,7 +64,9 @@ class MapRenderer {
             maxBounds: worldBounds,
             maxBoundsViscosity: 1.0,
             keyboard: true,
-            keyboardPanDelta: this.configService.get('map.keyboardPanDelta', CONSTANTS.MAP.KEYBOARD_PAN_DELTA)
+            keyboardPanDelta: this.configService.get('map.keyboardPanDelta', CONSTANTS.MAP.KEYBOARD_PAN_DELTA),
+            preferCanvas: true,  // Prefer Canvas over SVG
+            renderer: canvasRenderer  // Use custom Canvas renderer
         });
 
         L.tileLayer(CONSTANTS.TILES.CARTO_LIGHT, {
@@ -75,42 +84,44 @@ class MapRenderer {
 
     updateMap(geoJsonData, eventHandlers = {}) {
         this.clearSelection();
-        
-        if (this.currentLayer) {
-            this.map.removeLayer(this.currentLayer);
+
+        // Phase 2 optimization: Reuse layer instead of destroying and recreating
+        if (!this.currentLayer) {
+            // First time - create layer with event delegation
+            this.currentLayer = L.geoJSON(null, {
+                style: (feature) => this.getFeatureStyle(feature)
+            });
+            this.currentLayer.addTo(this.map);
+
+            // Phase 2 optimization: Event delegation instead of per-feature handlers
+            // Single event handler for entire layer (thousands of features)
+            this.currentLayer.on('click', (e) => {
+                if (e.layer && e.layer.feature && eventHandlers.onClick) {
+                    eventHandlers.onClick(e.layer.feature, e.layer);
+                    L.DomEvent.stopPropagation(e);
+                }
+            });
+
+            this.currentLayer.on('mouseover', (e) => {
+                if (e.layer && e.layer.feature && eventHandlers.onMouseOver) {
+                    if (this.selectedLayer !== e.layer) {
+                        eventHandlers.onMouseOver(e.layer);
+                    }
+                }
+            });
+
+            this.currentLayer.on('mouseout', (e) => {
+                if (e.layer && e.layer.feature && eventHandlers.onMouseOut) {
+                    if (this.selectedLayer !== e.layer) {
+                        eventHandlers.onMouseOut(e.layer);
+                    }
+                }
+            });
         }
 
-        this.currentLayer = L.geoJSON(geoJsonData, {
-            style: (feature) => this.getFeatureStyle(feature),
-            onEachFeature: (feature, layer) => {
-                if (eventHandlers.onClick) {
-                    layer.on('click', (e) => {
-                        eventHandlers.onClick(feature, layer);
-                        L.DomEvent.stopPropagation(e);
-                    });
-                }
-
-                if (eventHandlers.onMouseOver) {
-                    layer.on('mouseover', (e) => {
-                        if (this.selectedLayer !== e.target) {
-                            eventHandlers.onMouseOver(e.target);
-                        }
-                    });
-                }
-
-                if (eventHandlers.onMouseOut) {
-                    layer.on('mouseout', (e) => {
-                        if (this.selectedLayer !== e.target) {
-                            eventHandlers.onMouseOut(e.target);
-                        }
-                    });
-                }
-
-                this.setAccessibilityAttributes(layer, feature);
-            }
-        });
-
-        this.currentLayer.addTo(this.map);
+        // Clear existing features and add new ones (much faster than recreating layer)
+        this.currentLayer.clearLayers();
+        this.currentLayer.addData(geoJsonData);
     }
     
     /**
