@@ -1,320 +1,342 @@
 /**
- * Historical Interactive World Map - Modular Architecture
- * Main orchestrator class that coordinates all application modules
+ * Historical Interactive World Map - Simplified Version
+ * Direct and simple implementation without unnecessary abstractions
  */
 
 class HistoricalMap {
-    constructor(dependencies = {}) {
-        // Use dependency injection instead of hardcoding dependencies
-        this.configService = dependencies.configService || ConfigurationService.fromGlobalConfig();
-        this.eventBus = dependencies.eventBus || new EventBus();
-        this.periods = dependencies.periods || window.PeriodsConfig.getHistoricalPeriods();
-        
-        // State management
+    constructor() {
+        // Load periods configuration
+        this.periods = window.PeriodsConfig.getHistoricalPeriods();
+        this.currentPeriodIndex = 0;
         this.isLoading = false;
-        this.currentPeriodIndex = this.configService.get('ui.defaultPeriodIndex', CONSTANTS.UI.DEFAULT_PERIOD_INDEX);
-        
-        // Inject dependencies with configuration service
-        this.dataManager = dependencies.dataManager || new DataManager(this.configService, this.eventBus);
-        this.mapRenderer = dependencies.mapRenderer || new MapRenderer(this.configService, this.eventBus);
-        this.uiController = dependencies.uiController || new UIController(this.periods, this.configService, this.eventBus);
-        this.eventHandler = dependencies.eventHandler || new EventHandler(this.eventBus);
-        this.errorNotification = dependencies.errorNotification || new ErrorNotification(this.eventBus);
-        this.errorHandler = dependencies.errorHandler || new ErrorHandler();
 
-        // Create debounced function with configuration
-        const debounceDelay = this.configService.get('ui.debounceDelay', CONSTANTS.UI.DEFAULT_DEBOUNCE_DELAY);
-        this.debouncedLoadPeriod = Utils.debounce((periodIndex) => {
-            this.loadPeriod(periodIndex);
-        }, debounceDelay);
+        // Simple cache for loaded data
+        this.dataCache = new Map();
+        this.maxCacheSize = 25;
 
-        // Set up event bus in debug mode if in development
-        if (Utils.isDevelopment()) {
-            this.eventBus.setDebugMode(true);
-        }
+        // Components
+        this.map = null;
+        this.currentLayer = null;
+        this.selectedLayer = null;
+
+        // DOM elements
+        this.elements = {
+            slider: document.querySelector('#time-slider'),
+            currentPeriod: document.querySelector('#current-period'),
+            infoPanel: document.querySelector('#info-panel'),
+            territoryName: document.querySelector('#territory-name'),
+            territoryDetails: document.querySelector('#territory-details'),
+            closeButton: document.querySelector('#close-info'),
+            loading: document.querySelector('#loading')
+        };
 
         this.init();
     }
 
     init() {
-        this.mapRenderer.initMap();
-        this.setupEventHandlers();
+        this.initMap();
         this.initUI();
-        
-        const initialPeriodIndex = this.uiController.getCurrentPeriodIndex();
-        this.loadPeriod(initialPeriodIndex);
-        
-        const preloadDelay = Utils.getNestedProperty(window.CONFIG, 'performance.preloadDelay', CONSTANTS.UI.PRELOAD_DELAY);
-        setTimeout(() => this.dataManager.preloadAdjacentPeriods(this.periods, initialPeriodIndex), preloadDelay);
+        this.loadPeriod(this.currentPeriodIndex);
     }
 
-    setupEventHandlers() {
-        // Subscribe to EventBus events instead of direct coupling
-        this.eventBus.on(this.eventBus.EVENTS.TERRITORY_CLICKED, (event) => {
-            const { feature, layer } = event.data;
-            const currentPeriod = this.periods[this.currentPeriodIndex];
-            this.eventBus.emit(this.eventBus.EVENTS.INFO_PANEL_OPENED, { feature, currentPeriod });
+    initMap() {
+        // Create map
+        this.map = L.map('map', {
+            center: [20, 0],
+            zoom: 2,
+            minZoom: 2,
+            maxZoom: 6,
+            worldCopyJump: false,
+            preferCanvas: true
         });
 
-        this.eventBus.on(this.eventBus.EVENTS.PERIOD_CHANGED, (event) => {
-            const { periodIndex } = event.data;
-            this.currentPeriodIndex = periodIndex;
-            this.debouncedLoadPeriod(periodIndex);
-            this.eventBus.emit(this.eventBus.EVENTS.DATA_PRELOADED, { periods: this.periods, currentIndex: periodIndex });
-        });
+        // Add tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 6
+        }).addTo(this.map);
 
-        this.eventBus.on(this.eventBus.EVENTS.PERIOD_LOAD_ERROR, (event) => {
-            const { error, period } = event.data;
-            this.errorNotification.show(error, period, (retryPeriod) => {
-                const cacheKey = Utils.getCacheKey(retryPeriod);
-                this.dataManager.deleteCacheEntry(cacheKey);
-                this.loadPeriod(this.currentPeriodIndex);
-            });
-        });
-
-        this.eventBus.on(this.eventBus.EVENTS.CACHE_UPDATED, (event) => {
-            this.eventBus.emit(this.eventBus.EVENTS.CACHE_UPDATED, event.data);
-        });
+        // Add scale
+        L.control.scale({ position: 'bottomleft' }).addTo(this.map);
     }
 
     initUI() {
-        // UI initialization is now handled by UIController through EventBus
-        // No need for direct callback passing - everything goes through events
-        const debounceDelay = this.configService.get('ui.debounceDelay', CONSTANTS.UI.DEFAULT_DEBOUNCE_DELAY);
-        const debouncedPeriodChange = Utils.debounce((periodIndex) => {
-            this.eventBus.emit(this.eventBus.EVENTS.PERIOD_CHANGED, { periodIndex });
-        }, debounceDelay);
+        const { slider, currentPeriod, closeButton } = this.elements;
 
-        this.uiController.initSlider(debouncedPeriodChange);
-        this.uiController.initInfoPanel();
-        this.uiController.initKeyboardControls((periodIndex) => this.navigateToPeriod(periodIndex));
-        this.uiController.initCacheMonitor();
+        // Setup slider
+        slider.max = this.periods.length - 1;
+        slider.value = this.currentPeriodIndex;
+        currentPeriod.textContent = this.periods[this.currentPeriodIndex].label;
+
+        // Debounced slider change
+        let sliderTimeout = null;
+        slider.addEventListener('input', (e) => {
+            const index = parseInt(e.target.value);
+            this.currentPeriodIndex = index;
+            currentPeriod.textContent = this.periods[index].label;
+
+            clearTimeout(sliderTimeout);
+            sliderTimeout = setTimeout(() => {
+                this.loadPeriod(index);
+            }, 300);
+        });
+
+        // Close button
+        closeButton.addEventListener('click', () => {
+            this.hideInfoPanel();
+        });
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+
+            switch(e.key) {
+                case 'Escape':
+                    this.hideInfoPanel();
+                    break;
+                case 'ArrowLeft':
+                    if (this.currentPeriodIndex > 0) {
+                        this.navigateToPeriod(this.currentPeriodIndex - 1);
+                    }
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    if (this.currentPeriodIndex < this.periods.length - 1) {
+                        this.navigateToPeriod(this.currentPeriodIndex + 1);
+                    }
+                    e.preventDefault();
+                    break;
+            }
+        });
     }
 
-    navigateToPeriod(periodIndex) {
-        this.currentPeriodIndex = periodIndex;
-        this.eventBus.emit(this.eventBus.EVENTS.PERIOD_CHANGED, { periodIndex });
+    navigateToPeriod(index) {
+        this.currentPeriodIndex = index;
+        this.elements.slider.value = index;
+        this.elements.currentPeriod.textContent = this.periods[index].label;
+        this.loadPeriod(index);
     }
 
-
-
-
-
-
-
-    async loadPeriod(periodIndex) {
+    async loadPeriod(index) {
         if (this.isLoading) return;
-        
-        const period = this.periods[periodIndex];
+
+        const period = this.periods[index];
+        const cacheKey = period.file;
+
         this.isLoading = true;
-        
-        // Emit loading events instead of direct UI calls
-        this.eventBus.emit(this.eventBus.EVENTS.PERIOD_LOADING, { period, periodIndex });
-        this.eventBus.emit(this.eventBus.EVENTS.LOADING_SHOWN);
-        this.eventBus.emit(this.eventBus.EVENTS.ERROR_CLEARED);
+        this.showLoading();
+        this.hideInfoPanel();
 
         try {
-            const geoJsonData = await this.dataManager.loadPeriod(period);
-            this.updateMap(geoJsonData);
-            this.eventBus.emit(this.eventBus.EVENTS.PERIOD_LOADED, { period, periodIndex, data: geoJsonData });
-            
+            let geoJsonData;
+
+            // Check cache
+            if (this.dataCache.has(cacheKey)) {
+                console.log(`Loading ${period.label} from cache`);
+                geoJsonData = this.dataCache.get(cacheKey);
+            } else {
+                console.log(`Loading ${period.label} from network`);
+                const response = await fetch(`data/${period.file}`);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${period.file}: ${response.statusText}`);
+                }
+
+                geoJsonData = await response.json();
+
+                // Add to cache (LRU)
+                this.addToCache(cacheKey, geoJsonData);
+            }
+
+            this.updateMap(geoJsonData, period);
+
         } catch (error) {
-            console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Error loading period:`, error);
-            this.eventBus.emit(this.eventBus.EVENTS.PERIOD_LOAD_ERROR, { error, period, periodIndex });
+            console.error('Error loading period:', error);
+            this.showError(`Failed to load ${period.label}. Please try again.`);
         } finally {
             this.isLoading = false;
-            this.eventBus.emit(this.eventBus.EVENTS.LOADING_HIDDEN);
+            this.hideLoading();
         }
     }
 
-
-
-
-
-
-
-    updateMap(geoJsonData) {
-        this.eventBus.emit(this.eventBus.EVENTS.INFO_PANEL_CLOSED);
-        this.eventBus.emit(this.eventBus.EVENTS.MAP_UPDATED, { data: geoJsonData });
+    addToCache(key, data) {
+        // Remove oldest if cache is full
+        if (this.dataCache.size >= this.maxCacheSize) {
+            const firstKey = this.dataCache.keys().next().value;
+            this.dataCache.delete(firstKey);
+        }
+        this.dataCache.set(key, data);
     }
 
+    updateMap(geoJsonData, period) {
+        // Clear selection
+        this.selectedLayer = null;
 
+        // Remove old layer
+        if (this.currentLayer) {
+            this.map.removeLayer(this.currentLayer);
+        }
 
+        // Create new layer
+        this.currentLayer = L.geoJSON(geoJsonData, {
+            style: (feature) => this.getFeatureStyle(feature),
+            onEachFeature: (feature, layer) => {
+                // Click handler
+                layer.on('click', (e) => {
+                    this.handleTerritoryClick(feature, layer, period);
+                    L.DomEvent.stopPropagation(e);
+                });
 
+                // Hover handlers
+                layer.on('mouseover', (e) => {
+                    if (this.selectedLayer !== layer) {
+                        this.highlightFeature(layer);
+                    }
+                });
 
+                layer.on('mouseout', (e) => {
+                    if (this.selectedLayer !== layer) {
+                        this.resetHighlight(layer);
+                    }
+                });
+            }
+        });
 
-
-
-
-
-
-    clearCache() {
-        return this.dataManager.clearCache();
+        this.currentLayer.addTo(this.map);
     }
 
-    getCacheStats() {
-        return this.dataManager.getCacheStats();
+    getFeatureStyle(feature) {
+        const hasName = feature.properties &&
+                       (feature.properties.NAME ||
+                        feature.properties.name ||
+                        feature.properties.NAME_EN);
+
+        return {
+            fillColor: hasName ? '#3498db' : '#95a5a6',
+            weight: 2,
+            opacity: 1,
+            color: 'rgba(255, 255, 255, 0.8)',
+            fillOpacity: hasName ? 0.7 : 0.4
+        };
     }
 
-    destroy() {
-        // Clean up all components
-        if (this.uiController) this.uiController.destroy();
-        if (this.errorNotification) this.errorNotification.hide();
-        if (this.dataManager) this.dataManager.clearCache();
-        if (this.mapRenderer) this.mapRenderer.destroy();
-        
-        // Clear all event listeners
-        if (this.eventBus) this.eventBus.clear();
+    highlightFeature(layer) {
+        layer.setStyle({
+            weight: 3,
+            color: 'rgba(255, 255, 255, 1)',
+            fillOpacity: 0.9,
+            dashArray: '3'
+        });
+
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            layer.bringToFront();
+        }
     }
 
-}
+    resetHighlight(layer) {
+        if (this.currentLayer) {
+            this.currentLayer.resetStyle(layer);
+        }
+    }
 
-/**
- * Factory for creating HistoricalMap instances with proper dependency injection
- */
-class HistoricalMapFactory {
-    static create(options = {}) {
-        // Create configuration service
-        const configService = options.configService || ConfigurationService.fromGlobalConfig();
-        
-        if (!configService.isValid()) {
-            const validation = configService.getValidationResult();
-            console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Configuration validation failed:`, validation.errors);
-            if (validation.warnings.length > 0) {
-                console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Configuration warnings:`, validation.warnings);
+    handleTerritoryClick(feature, layer, period) {
+        // Clear previous selection
+        if (this.selectedLayer && this.currentLayer) {
+            this.currentLayer.resetStyle(this.selectedLayer);
+        }
+
+        // Highlight selected territory
+        this.selectedLayer = layer;
+        layer.setStyle({
+            weight: 4,
+            color: 'rgba(255, 255, 255, 1)',
+            fillColor: '#f39c12',
+            fillOpacity: 0.9
+        });
+
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            layer.bringToFront();
+        }
+
+        // Show info panel
+        this.showTerritoryInfo(feature, period);
+    }
+
+    showTerritoryInfo(feature, period) {
+        const props = feature.properties;
+        const name = props.NAME || props.name || props.NAME_EN || 'Unknown Territory';
+
+        this.elements.territoryName.textContent = name;
+
+        // Build details
+        let details = `<div><strong>Territory:</strong> ${this.sanitize(name)}</div>`;
+
+        // Add other properties
+        for (const [key, value] of Object.entries(props)) {
+            if (key !== 'NAME' && key !== 'name' && key !== 'NAME_EN' && value) {
+                const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                details += `<div><strong>${this.sanitize(displayKey)}:</strong> ${this.sanitize(String(value))}</div>`;
             }
         }
 
-        // Create event bus
-        const eventBus = options.eventBus || new EventBus();
-        
-        // Get periods configuration
-        const periods = options.periods || window.PeriodsConfig.getHistoricalPeriods();
+        details += `<div><strong>Period:</strong> ${this.sanitize(period.label)}</div>`;
 
-        // Create dependencies with proper injection
-        const dependencies = {
-            configService,
-            eventBus,
-            periods,
-            dataManager: options.dataManager,
-            mapRenderer: options.mapRenderer,
-            uiController: options.uiController,
-            eventHandler: options.eventHandler,
-            errorNotification: options.errorNotification,
-            errorHandler: options.errorHandler
-        };
-
-        return new HistoricalMap(dependencies);
+        this.elements.territoryDetails.innerHTML = details;
+        this.elements.infoPanel.classList.remove('hidden');
     }
 
-    /**
-     * Create instance for testing with mock dependencies
-     */
-    static createForTesting(mockDependencies = {}) {
-        const defaultMocks = {
-            configService: {
-                get: (path, defaultValue) => defaultValue,
-                isValid: () => true,
-                getValidationResult: () => ({ errors: [], warnings: [] })
-            },
-            eventBus: {
-                on: () => {},
-                emit: () => {},
-                clear: () => {},
-                setDebugMode: () => {},
-                EVENTS: {}
-            },
-            periods: [{ year: 2000, file: 'test.geojson', label: 'Test' }]
-        };
+    hideInfoPanel() {
+        this.elements.infoPanel.classList.add('hidden');
 
-        return HistoricalMapFactory.create({ ...defaultMocks, ...mockDependencies });
+        // Clear selection
+        if (this.selectedLayer && this.currentLayer) {
+            this.currentLayer.resetStyle(this.selectedLayer);
+            this.selectedLayer = null;
+        }
+    }
+
+    showLoading() {
+        this.elements.loading.classList.remove('hidden');
+    }
+
+    hideLoading() {
+        this.elements.loading.classList.add('hidden');
+    }
+
+    showError(message) {
+        // Simple error display
+        alert(message);
+    }
+
+    sanitize(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    destroy() {
+        if (this.map) {
+            this.map.remove();
+        }
+        this.dataCache.clear();
     }
 }
 
-// Initialize the application when the DOM is loaded
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    const mapContainer = document.querySelector(CONSTANTS.SELECTORS.MAP);
-    if (!mapContainer) {
-        console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Map container not found!`);
-        return;
-    }
-
     try {
-        // Create the application using the factory
-        window.historicalMap = HistoricalMapFactory.create();
-        
-        // Expose debugging methods
-        window.getCacheStats = () => window.historicalMap.getCacheStats();
-        window.clearCache = () => window.historicalMap.clearCache();
-        window.getEventBusDebugInfo = () => window.historicalMap.eventBus.getDebugInfo();
-
-        // Register Service Worker for offline caching (Phase 1 optimization)
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then((registration) => {
-                    console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Service Worker registered successfully:`, registration.scope);
-
-                    // Listen for updates
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Service Worker update found`);
-
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} New Service Worker available. Refresh to update.`);
-                            }
-                        });
-                    });
-                })
-                .catch((error) => {
-                    console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Service Worker registration failed:`, error);
-                });
-        }
-
-        console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Application initialized successfully`);
+        window.historicalMap = new HistoricalMap();
+        console.log('Historical Map initialized successfully');
     } catch (error) {
-        console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Failed to initialize application:`, error);
-        
-        // Show user-friendly error message
-        const errorDiv = document.createElement('div');
-        errorDiv.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #f8d7da;
-            color: #721c24;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #f5c6cb;
-            max-width: 400px;
-            text-align: center;
-            z-index: 10000;
-        `;
-        errorDiv.innerHTML = `
-            <h3>Application Failed to Load</h3>
-            <p>There was an error initializing the Historical World Map. Please refresh the page and try again.</p>
-            <small>Error: ${error.message}</small>
-        `;
-        document.body.appendChild(errorDiv);
+        console.error('Failed to initialize map:', error);
+        alert('Failed to load the Historical World Map. Please refresh the page.');
     }
 });
 
-// Handle page unload for cleanup
+// Cleanup on page unload
 window.addEventListener('beforeunload', () => {
     if (window.historicalMap) {
         window.historicalMap.destroy();
     }
-});
-
-// Handle global errors
-window.addEventListener('error', (e) => {
-    console.error(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Global error:`, e.error);
-    
-    // Create global error handler if not exists
-    if (!window.globalErrorHandler) {
-        window.globalErrorHandler = new ErrorHandler();
-    }
-    
-    window.globalErrorHandler.handleError(e.error, 'global');
 });

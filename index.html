@@ -6,37 +6,23 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#667eea">
-    
-    <!-- Content Security Policy for XSS protection -->
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self';
-        script-src 'self' https://unpkg.com/leaflet@1.9.4/dist/;
-        style-src 'self' https://unpkg.com/leaflet@1.9.4/dist/ https://fonts.googleapis.com 'unsafe-inline';
-        font-src 'self' https://fonts.gstatic.com;
-        img-src 'self' https://img.icons8.com https://*.basemaps.cartocdn.com data:;
-        connect-src 'self';
-        object-src 'none';
-        base-uri 'self';
-        form-action 'self';
-        frame-ancestors 'none';
-    ">
-    
+
     <title>Historical Interactive World Map</title>
-    
-    <!-- Favicon and Icons -->
+
+    <!-- Favicon -->
     <link type="image/png" sizes="100x100" rel="icon" href="https://img.icons8.com/3d-fluency/100/globe.png" />
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Custom CSS - Modular approach -->
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
@@ -53,7 +39,7 @@
         <!-- Map Container -->
         <div id="map-container">
             <div id="map"></div>
-            
+
             <!-- Loading indicator -->
             <div id="loading" class="loading backdrop-blur-20 hidden">
                 <div class="spinner"></div>
@@ -84,7 +70,7 @@
                 <button id="close-info">&times;</button>
             </div>
             <div class="info-content">
-                <p id="territory-details">Click on a territory to see information</p>
+                <div id="territory-details">Click on a territory to see information</div>
             </div>
         </div>
 
@@ -98,25 +84,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
-    
-    <!-- Load order: Constants → Utils → Validators → ErrorHandler → Configuration → New Services → Modules → App -->
-    <script src="js/constants.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/validators.js"></script>
-    <script src="js/ErrorHandler.js"></script>
-    <script src="config.js"></script>
-    
-    <!-- New Architecture Services -->
+
+    <!-- Configuration -->
     <script src="js/periodsConfig.js"></script>
-    <script src="js/ConfigurationService.js"></script>
-    <script src="js/EventBus.js"></script>
-    
-    <!-- Custom JavaScript Modules -->
-    <script src="js/DataManager.js"></script>
-    <script src="js/MapRenderer.js"></script>
-    <script src="js/UIController.js"></script>
-    <script src="js/EventHandler.js"></script>
-    <script src="js/ErrorNotification.js"></script>
+
+    <!-- Main Application -->
     <script src="app.js"></script>
 </body>
 </html>
