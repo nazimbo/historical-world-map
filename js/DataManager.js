@@ -7,6 +7,7 @@ class DataManager {
         this.maxCacheSize = this.configService.get('cache.maxSize', CONSTANTS.CACHE.DEFAULT_MAX_SIZE);
         this.optimizationThreshold = this.configService.get('cache.optimizationThreshold', CONSTANTS.CACHE.DEFAULT_OPTIMIZATION_THRESHOLD);
         this.coordinatePrecision = this.configService.get('performance.coordinatePrecision', CONSTANTS.DATA.COORDINATE_PRECISION);
+        this.simplificationTolerance = this.configService.get('performance.simplificationTolerance', CONSTANTS.DATA.SIMPLIFICATION_TOLERANCE);
         
         this.cacheStats = {
             hits: 0,
@@ -17,6 +18,7 @@ class DataManager {
         
         this.preloadQueue = new Set();
         this.isPreloading = false;
+        this.preloadTimers = [];  // Phase 2: Track timers to prevent memory leaks
         this.errorHandler = new ErrorHandler();
         
         this.setupEventListeners();
@@ -104,14 +106,19 @@ class DataManager {
         }
 
         console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Optimizing GeoJSON data (estimated ${Utils.formatFileSize(estimatedSize)})`);
-        
+
+        // Phase 2 optimization: Use Douglas-Peucker algorithm for better compression
         return {
             ...data,
             features: data.features.map(feature => ({
                 ...feature,
                 geometry: {
                     ...feature.geometry,
-                    coordinates: Utils.simplifyCoordinates(feature.geometry.coordinates, this.coordinatePrecision)
+                    coordinates: Utils.simplifyCoordinates(
+                        feature.geometry.coordinates,
+                        this.coordinatePrecision,
+                        this.simplificationTolerance
+                    )
                 },
                 properties: { ...feature.properties }
             }))
@@ -183,52 +190,101 @@ class DataManager {
     }
 
     async preloadAdjacentPeriods(periods, currentIndex) {
+        // Phase 2: Clear existing timers to prevent memory leaks
+        this.clearPreloadTimers();
+
         if (this.isPreloading) return;
-        
+
         this.isPreloading = true;
         const preloadDistance = this.configService.get('cache.preloadDistance', CONSTANTS.CACHE.DEFAULT_PRELOAD_DISTANCE);
-        
+
         const indicesToPreload = [];
         for (let i = 1; i <= preloadDistance; i++) {
             indicesToPreload.push(currentIndex - i, currentIndex + i);
         }
-        const validIndices = indicesToPreload.filter(i => i >= 0 && i < periods.length);
-        
-        for (const index of validIndices) {
-            const period = periods[index];
-            const cacheKey = Utils.getCacheKey(period);
-            
-            if (!this.dataCache.has(cacheKey) && !this.preloadQueue.has(cacheKey)) {
-                this.preloadQueue.add(cacheKey);
-                
-                const delay = this.configService.get('performance.preloadStagger', CONSTANTS.UI.PRELOAD_STAGGER) * Math.abs(currentIndex - index);
-                
-                setTimeout(async () => {
-                    if (!this.dataCache.has(cacheKey)) {
-                        try {
-                            console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Preloading ${period.label} in background`);
-                            const response = await fetch(`data/${period.file}`);
-                            if (response.ok) {
-                                const data = await response.json();
-                                const validation = Validators.validateGeoJSON(data, period.file);
-                                if (validation.isValid) {
-                                    const optimizedData = this.optimizeGeoJSON(data);
-                                    this.addToCache(cacheKey, optimizedData);
-                                } else {
-                                    console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Invalid preloaded data for ${period.file}:`, validation.errors);
-                                }
-                            }
-                        } catch (error) {
-                            console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Failed to preload ${period.file}:`, error.message);
-                        } finally {
-                            this.preloadQueue.delete(cacheKey);
+
+        // Sort by distance (closest first) for better UX
+        const validIndices = indicesToPreload
+            .filter(i => i >= 0 && i < periods.length)
+            .sort((a, b) => Math.abs(currentIndex - a) - Math.abs(currentIndex - b));
+
+        // Phase 2: Use requestIdleCallback for better browser integration
+        this.schedulePreload(validIndices, periods, 0);
+
+        this.isPreloading = false;
+    }
+
+    /**
+     * Schedule preload using requestIdleCallback (Phase 2 optimization)
+     * Falls back to setTimeout if requestIdleCallback not available
+     */
+    schedulePreload(indices, periods, currentIdx) {
+        if (currentIdx >= indices.length) {
+            return;
+        }
+
+        const index = indices[currentIdx];
+        const period = periods[index];
+        const cacheKey = Utils.getCacheKey(period);
+
+        if (this.dataCache.has(cacheKey) || this.preloadQueue.has(cacheKey)) {
+            // Already cached or queued, move to next
+            this.schedulePreload(indices, periods, currentIdx + 1);
+            return;
+        }
+
+        this.preloadQueue.add(cacheKey);
+
+        // Use requestIdleCallback for non-blocking preload
+        const scheduleCallback = (callback) => {
+            if ('requestIdleCallback' in window) {
+                const handle = requestIdleCallback(callback, { timeout: 2000 });
+                this.preloadTimers.push({ type: 'idle', handle });
+            } else {
+                const handle = setTimeout(callback, 100);
+                this.preloadTimers.push({ type: 'timeout', handle });
+            }
+        };
+
+        scheduleCallback(async () => {
+            if (!this.dataCache.has(cacheKey)) {
+                try {
+                    console.log(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Preloading ${period.label} in background`);
+                    const response = await fetch(`data/${period.file}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const validation = Validators.validateGeoJSON(data, period.file);
+                        if (validation.isValid) {
+                            const optimizedData = this.optimizeGeoJSON(data);
+                            this.addToCache(cacheKey, optimizedData);
+                        } else {
+                            console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Invalid preloaded data for ${period.file}:`, validation.errors);
                         }
                     }
-                }, delay);
+                } catch (error) {
+                    console.warn(`${CONSTANTS.DEVELOPMENT.LOG_PREFIX} Failed to preload ${period.file}:`, error.message);
+                } finally {
+                    this.preloadQueue.delete(cacheKey);
+                }
             }
-        }
-        
-        this.isPreloading = false;
+
+            // Schedule next preload
+            this.schedulePreload(indices, periods, currentIdx + 1);
+        });
+    }
+
+    /**
+     * Clear all preload timers (Phase 2 memory leak fix)
+     */
+    clearPreloadTimers() {
+        this.preloadTimers.forEach(timer => {
+            if (timer.type === 'timeout') {
+                clearTimeout(timer.handle);
+            } else if (timer.type === 'idle') {
+                cancelIdleCallback(timer.handle);
+            }
+        });
+        this.preloadTimers = [];
     }
 
     getCacheStats() {

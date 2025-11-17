@@ -39,6 +39,7 @@ const CONSTANTS = {
     // Data processing
     DATA: {
         COORDINATE_PRECISION: 6,
+        SIMPLIFICATION_TOLERANCE: 0.0001, // Douglas-Peucker tolerance (Phase 2 optimization)
         MIN_VALID_PROPERTIES: 1,
         GEOJSON_REQUIRED_PROPS: ['type', 'features']
     },
