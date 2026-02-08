@@ -140,6 +140,18 @@ body {
     display: none;
 }
 
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* Mobile performance optimizations - Disable expensive backdrop-filter on smaller devices */
 @media (max-width: 768px) {
     .time-controls, .info-panel, .loading, .error-notification {

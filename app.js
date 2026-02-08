@@ -14,6 +14,10 @@ class HistoricalMap {
         this.dataCache = new Map();
         this.maxCacheSize = 25;
 
+        // Request management
+        this.pendingIndex = null;
+        this.abortController = null;
+
         // Components
         this.map = null;
         this.currentLayer = null;
@@ -75,6 +79,7 @@ class HistoricalMap {
             const index = parseInt(e.target.value);
             this.currentPeriodIndex = index;
             currentPeriod.textContent = this.periods[index].label;
+            slider.setAttribute('aria-valuetext', this.periods[index].label);
 
             clearTimeout(sliderTimeout);
             sliderTimeout = setTimeout(() => {
@@ -115,47 +120,60 @@ class HistoricalMap {
         this.currentPeriodIndex = index;
         this.elements.slider.value = index;
         this.elements.currentPeriod.textContent = this.periods[index].label;
+        this.elements.slider.setAttribute('aria-valuetext', this.periods[index].label);
         this.loadPeriod(index);
     }
 
     async loadPeriod(index) {
-        if (this.isLoading) return;
+        this.pendingIndex = index;
 
-        const period = this.periods[index];
-        const cacheKey = period.file;
+        if (this.isLoading) return;
 
         this.isLoading = true;
         this.showLoading();
         this.hideInfoPanel();
 
         try {
-            let geoJsonData;
+            while (this.pendingIndex !== null) {
+                const targetIndex = this.pendingIndex;
+                this.pendingIndex = null;
 
-            // Check cache
-            if (this.dataCache.has(cacheKey)) {
-                console.log(`Loading ${period.label} from cache`);
-                geoJsonData = this.dataCache.get(cacheKey);
-            } else {
-                console.log(`Loading ${period.label} from network`);
-                const response = await fetch(`data/${period.file}`);
+                const period = this.periods[targetIndex];
+                const cacheKey = period.file;
+                let geoJsonData;
 
-                if (!response.ok) {
-                    throw new Error(`Failed to load ${period.file}: ${response.statusText}`);
+                if (this.dataCache.has(cacheKey)) {
+                    geoJsonData = this.dataCache.get(cacheKey);
+                } else {
+                    // Abort any in-flight fetch
+                    if (this.abortController) {
+                        this.abortController.abort();
+                    }
+                    this.abortController = new AbortController();
+
+                    const response = await fetch(`data/${period.file}`, {
+                        signal: this.abortController.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${period.file}: ${response.statusText}`);
+                    }
+
+                    geoJsonData = await response.json();
+                    this.addToCache(cacheKey, geoJsonData);
                 }
 
-                geoJsonData = await response.json();
-
-                // Add to cache (LRU)
-                this.addToCache(cacheKey, geoJsonData);
+                // Only render if no newer request arrived during fetch
+                if (this.pendingIndex === null) {
+                    this.updateMap(geoJsonData, period);
+                }
             }
-
-            this.updateMap(geoJsonData, period);
-
         } catch (error) {
-            console.error('Error loading period:', error);
-            this.showError(`Failed to load ${period.label}. Please try again.`);
+            if (error.name === 'AbortError') return;
+            this.showError(`Failed to load data. Please try again.`);
         } finally {
             this.isLoading = false;
+            this.abortController = null;
             this.hideLoading();
         }
     }
@@ -189,13 +207,13 @@ class HistoricalMap {
                 });
 
                 // Hover handlers
-                layer.on('mouseover', (e) => {
+                layer.on('mouseover', () => {
                     if (this.selectedLayer !== layer) {
                         this.highlightFeature(layer);
                     }
                 });
 
-                layer.on('mouseout', (e) => {
+                layer.on('mouseout', () => {
                     if (this.selectedLayer !== layer) {
                         this.resetHighlight(layer);
                     }
@@ -228,10 +246,7 @@ class HistoricalMap {
             fillOpacity: 0.9,
             dashArray: '3'
         });
-
-        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-            layer.bringToFront();
-        }
+        layer.bringToFront();
     }
 
     resetHighlight(layer) {
@@ -254,10 +269,7 @@ class HistoricalMap {
             fillColor: '#f39c12',
             fillOpacity: 0.9
         });
-
-        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-            layer.bringToFront();
-        }
+        layer.bringToFront();
 
         // Show info panel
         this.showTerritoryInfo(feature, period);
@@ -305,8 +317,45 @@ class HistoricalMap {
     }
 
     showError(message) {
-        // Simple error display
-        alert(message);
+        const existing = document.querySelector('.error-notification');
+        if (existing) existing.remove();
+
+        const notification = document.createElement('div');
+        notification.className = 'error-notification';
+        notification.innerHTML = '';
+
+        const content = document.createElement('div');
+        content.className = 'error-content';
+
+        const heading = document.createElement('h4');
+        heading.textContent = 'Loading Error';
+        content.appendChild(heading);
+
+        const text = document.createElement('p');
+        text.textContent = message;
+        content.appendChild(text);
+
+        const actions = document.createElement('div');
+        actions.className = 'error-actions';
+
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'retry-button';
+        retryBtn.textContent = 'Retry';
+        retryBtn.addEventListener('click', () => {
+            notification.remove();
+            this.loadPeriod(this.currentPeriodIndex);
+        });
+
+        const dismissBtn = document.createElement('button');
+        dismissBtn.className = 'dismiss-button';
+        dismissBtn.textContent = 'Dismiss';
+        dismissBtn.addEventListener('click', () => notification.remove());
+
+        actions.appendChild(retryBtn);
+        actions.appendChild(dismissBtn);
+        content.appendChild(actions);
+        notification.appendChild(content);
+        document.body.appendChild(notification);
     }
 
     sanitize(str) {
@@ -316,6 +365,9 @@ class HistoricalMap {
     }
 
     destroy() {
+        if (this.abortController) {
+            this.abortController.abort();
+        }
         if (this.map) {
             this.map.remove();
         }
@@ -327,10 +379,16 @@ class HistoricalMap {
 document.addEventListener('DOMContentLoaded', () => {
     try {
         window.historicalMap = new HistoricalMap();
-        console.log('Historical Map initialized successfully');
     } catch (error) {
-        console.error('Failed to initialize map:', error);
-        alert('Failed to load the Historical World Map. Please refresh the page.');
+        const el = document.getElementById('map');
+        if (el) {
+            el.style.display = 'flex';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'center';
+            el.style.color = '#fff';
+            el.style.fontSize = '1.2rem';
+            el.textContent = 'Failed to load the Historical World Map. Please refresh the page.';
+        }
     }
 });
 

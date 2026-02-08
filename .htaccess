@@ -95,7 +95,7 @@ FileETag None
 # Security Headers
 <IfModule mod_headers.c>
     # Content Security Policy
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.cartocdn.com https://*.openstreetmap.org; font-src 'self'; frame-ancestors 'none';"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.cartocdn.com https://*.openstreetmap.org; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';"
 
     # X-Content-Type-Options
     Header set X-Content-Type-Options "nosniff"
