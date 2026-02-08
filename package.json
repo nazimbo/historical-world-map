@@ -1,40 +1,48 @@
 {
-  "name": "historical-world-map",
-  "version": "2.0.0",
-  "description": "Interactive historical world map with modular architecture",
-  "main": "index.html",
-  "scripts": {
-    "start": "python -m http.server 8000",
-    "serve": "npx serve . -p 8000",
-    "dev": "python -m http.server 8000",
-    "validate": "find data/ -name '*.geojson' -exec python -m json.tool {} /dev/null \\;",
-    "test": "echo \"No tests specified\" && exit 0",
-    "lint": "echo \"No linting configured\" && exit 0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "."
-  },
-  "keywords": [
-    "history",
-    "map",
-    "interactive",
-    "geojson",
-    "leaflet",
-    "modular",
-    "javascript",
-    "educational"
-  ],
-  "author": "nazimbo",
-  "license": "MIT",
-  "devDependencies": {},
-  "dependencies": {},
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead"
-  ]
+	"name": "historical-world-map",
+	"private": true,
+	"version": "2.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"convert-topojson": "node scripts/convert-topojson.js",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:e2e": "playwright test",
+		"lint": "eslint .",
+		"format": "prettier --write ."
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.39.2",
+		"@playwright/test": "^1.45.0",
+		"@sveltejs/adapter-static": "^3.0.0",
+		"@sveltejs/kit": "^2.50.2",
+		"@sveltejs/vite-plugin-svelte": "^6.2.4",
+		"@types/geojson": "^7946.0.16",
+		"@types/topojson-client": "^3.1.5",
+		"@types/topojson-specification": "^1.0.5",
+		"eslint": "^9.0.0",
+		"eslint-plugin-svelte": "^3.0.0",
+		"globals": "^17.3.0",
+		"prettier": "^3.3.0",
+		"prettier-plugin-svelte": "^3.2.0",
+		"svelte": "^5.49.2",
+		"svelte-check": "^4.3.6",
+		"topojson-client": "^3.1.0",
+		"topojson-server": "^3.0.1",
+		"topojson-simplify": "^3.0.3",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.1",
+		"vitest": "^3.0.0"
+	},
+	"dependencies": {
+		"@tailwindcss/vite": "^4.1.18",
+		"maplibre-gl": "^5.0.0",
+		"tailwindcss": "^4.1.18"
+	}
 }
