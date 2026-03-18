@@ -18,23 +18,29 @@
 	let dataService: DataService;
 	let mapComponent: Map;
 	let previousDirection = 0;
+	let loadGeneration = 0;
 
 	async function loadPeriod(index: number) {
+		const generation = ++loadGeneration;
 		isLoading = true;
 		errorMessage = null;
 
 		try {
 			const data = await dataService.loadPeriod(index);
+			if (generation !== loadGeneration) return; // superseded by newer request
 			if (data) {
 				geojsonData = data;
 				selectedTerritory = null;
 			}
 		} catch (err) {
+			if (generation !== loadGeneration) return; // superseded
 			console.error('Failed to load period:', err);
 			const detail = err instanceof Error ? err.message : String(err);
 			errorMessage = `Failed to load historical data: ${detail}`;
 		} finally {
-			isLoading = false;
+			if (generation === loadGeneration) {
+				isLoading = false;
+			}
 		}
 	}
 
@@ -83,7 +89,7 @@
 	<title>Historical Interactive World Map</title>
 </svelte:head>
 
-<main class="flex flex-col h-screen relative">
+<main class="flex flex-col h-screen relative overflow-hidden">
 	<header class="header absolute top-5 left-5 right-5 z-[1000] bg-white/90 border border-gray-200 rounded-xl shadow-md px-4 py-3 text-center">
 		<h1 class="text-lg font-semibold text-gray-900 m-0 inline-flex items-center gap-2 tracking-tight">
 			<span aria-hidden="true">🌍</span>

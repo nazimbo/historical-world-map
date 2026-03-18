@@ -15,6 +15,7 @@
 	let map: maplibregl.Map | undefined;
 	let mapReady = $state(false);
 	let selectedFeatureId: string | number | undefined = undefined;
+	let hoveredFeatureId: number | undefined = undefined;
 
 	const MAP_COLORS = {
 		selected: '#f39c12',
@@ -26,6 +27,13 @@
 		type: 'FeatureCollection',
 		features: []
 	};
+
+	// Data has NAME: null for unnamed territories, so ['has'] alone is insufficient.
+	// coalesce picks the first non-null value; to-boolean treats null and "" as false.
+	const HAS_NAME: maplibregl.ExpressionSpecification = [
+		'to-boolean',
+		['coalesce', ['get', 'NAME'], ['get', 'name'], ['get', 'NAME_EN']]
+	];
 
 	onMount(() => {
 		map = new maplibregl.Map({
@@ -83,17 +91,7 @@
 						'case',
 						['boolean', ['feature-state', 'selected'], false],
 						MAP_COLORS.selected,
-						[
-							'case',
-							[
-								'any',
-								['has', 'NAME'],
-								['has', 'name'],
-								['has', 'NAME_EN']
-							],
-							MAP_COLORS.named,
-							MAP_COLORS.unnamed
-						]
+						['case', HAS_NAME, MAP_COLORS.named, MAP_COLORS.unnamed]
 					],
 					'fill-opacity': [
 						'case',
@@ -103,17 +101,7 @@
 							'case',
 							['boolean', ['feature-state', 'hover'], false],
 							0.9,
-							[
-								'case',
-								[
-									'any',
-									['has', 'NAME'],
-									['has', 'name'],
-									['has', 'NAME_EN']
-								],
-								0.7,
-								0.4
-							]
+							['case', HAS_NAME, 0.7, 0.4]
 						]
 					]
 				}
@@ -152,8 +140,6 @@
 			// Mark map as ready — this triggers the $effect to apply any pending data
 			mapReady = true;
 		});
-
-		let hoveredFeatureId: number | undefined;
 
 		map.on('mousemove', 'territories-fill', (e) => {
 			if (!map || !e.features || e.features.length === 0) return;
@@ -214,9 +200,11 @@
 		if (!map) return;
 		const source = map.getSource('territories') as maplibregl.GeoJSONSource | undefined;
 		if (source) {
-			if (selectedFeatureId !== undefined) {
-				selectedFeatureId = undefined;
-			}
+			// Clear all feature-state (selected + hover) before replacing data
+			// to prevent stale state leaking to features with reused IDs
+			map.removeFeatureState({ source: 'territories' });
+			selectedFeatureId = undefined;
+			hoveredFeatureId = undefined;
 			source.setData(data as GeoJSON.GeoJSON);
 		}
 	}

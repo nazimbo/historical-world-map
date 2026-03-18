@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
+	import { fly, fade } from 'svelte/transition';
 
 	interface Props {
 		territory: Record<string, unknown> | null;
@@ -32,14 +32,16 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
+		if (e.key === 'Escape' && territory) {
 			onclose();
 		}
 	}
 
+	let entries = $derived(territory ? getDisplayEntries(territory) : []);
+
 	$effect(() => {
 		if (territory && panelElement) {
-			panelElement.focus();
+			panelElement.focus({ preventScroll: true });
 		}
 	});
 </script>
@@ -48,43 +50,253 @@
 
 {#if territory}
 	<div
-		class="info-panel absolute top-5 right-5 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-[1000] max-h-[400px] overflow-y-auto select-text"
+		class="info-panel"
 		bind:this={panelElement}
-		transition:fly={{ x: 320, duration: reducedMotion ? 0 : 300 }}
+		transition:fly={{ x: 340, duration: reducedMotion ? 0 : 350, opacity: 0.5 }}
 		tabindex="-1"
 		role="region"
 		aria-label="Territory information"
 	>
-		<div class="flex justify-between items-center px-5 py-4 bg-gray-50 border-b border-gray-200 rounded-t-xl">
-			<h3 class="text-gray-900 text-lg font-semibold m-0">{getTerritoryName(territory)}</h3>
+		<!-- Accent bar -->
+		<div class="accent-bar" aria-hidden="true"></div>
+
+		<!-- Header -->
+		<div class="panel-header">
+			<div class="header-content">
+				<h3 class="territory-name">{getTerritoryName(territory)}</h3>
+				<span class="period-badge">
+					<svg class="badge-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+						<path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm0 14.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13zM8.5 4h-1.2v4.4l3.7 2.2.6-1-3.1-1.8V4z"/>
+					</svg>
+					{periodLabel}
+				</span>
+			</div>
 			<button
-				class="bg-transparent border-none text-gray-500 text-2xl cursor-pointer p-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 hover:text-gray-900 transition-colors"
+				class="close-btn"
 				onclick={onclose}
 				aria-label="Close territory information panel"
 			>
-				&times;
+				<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+					<path d="M4 4l8 8M12 4l-8 8"/>
+				</svg>
 			</button>
 		</div>
-		<div class="px-5 py-4 text-gray-700 leading-relaxed">
-			<div class="mb-1">
-				<strong class="text-gray-900 mr-1">Territory:</strong>
-				<span>{getTerritoryName(territory)}</span>
+
+		<!-- Properties -->
+		{#if entries.length > 0}
+			<div class="panel-body">
+				<dl class="properties">
+					{#each entries as entry, i (entry.key)}
+						{#if i > 0}
+							<div class="separator" aria-hidden="true"></div>
+						{/if}
+						<div class="property" in:fade={{ delay: reducedMotion ? 0 : 40 * i, duration: reducedMotion ? 0 : 200 }}>
+							<dt>{entry.key}</dt>
+							<dd>{entry.value}</dd>
+						</div>
+					{/each}
+				</dl>
 			</div>
-			{#each getDisplayEntries(territory) as entry (entry.key)}
-				<div class="mb-1">
-					<strong class="text-gray-900 mr-1">{entry.key}:</strong>
-					<span>{entry.value}</span>
-				</div>
-			{/each}
-			<div class="mb-1">
-				<strong class="text-gray-900 mr-1">Period:</strong>
-				<span>{periodLabel}</span>
+		{:else}
+			<div class="panel-body">
+				<p class="empty-state">No additional details available for this territory.</p>
 			</div>
-		</div>
+		{/if}
 	</div>
 {/if}
 
 <style>
+	.info-panel {
+		position: absolute;
+		top: 1.25rem;
+		right: 1.25rem;
+		width: 320px;
+		max-height: 440px;
+		display: flex;
+		flex-direction: column;
+		background: rgba(255, 255, 255, 0.92);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		border: 1px solid rgba(229, 231, 235, 0.8);
+		border-radius: 16px;
+		box-shadow:
+			0 4px 6px -1px rgba(0, 0, 0, 0.05),
+			0 10px 22px -4px rgba(0, 0, 0, 0.08),
+			0 0 0 1px rgba(0, 0, 0, 0.02);
+		z-index: 1000;
+		overflow: hidden;
+		user-select: text;
+	}
+
+	.info-panel:focus {
+		outline: none;
+	}
+
+	/* Accent gradient bar */
+	.accent-bar {
+		height: 3px;
+		background: linear-gradient(90deg, #f39c12, #e67e22, #f39c12);
+		flex-shrink: 0;
+	}
+
+	/* Header */
+	.panel-header {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 1rem 1.25rem 0.875rem;
+		flex-shrink: 0;
+	}
+
+	.header-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.territory-name {
+		margin: 0;
+		font-size: 1.05rem;
+		font-weight: 700;
+		line-height: 1.3;
+		color: var(--color-gray-900);
+		letter-spacing: -0.01em;
+	}
+
+	.period-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		margin-top: 0.4rem;
+		padding: 0.2rem 0.55rem;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: #92400e;
+		background: #fef3c7;
+		border: 1px solid #fde68a;
+		border-radius: 100px;
+		letter-spacing: 0.02em;
+		white-space: nowrap;
+	}
+
+	.badge-icon {
+		width: 0.7rem;
+		height: 0.7rem;
+		flex-shrink: 0;
+		opacity: 0.7;
+	}
+
+	.close-btn {
+		flex-shrink: 0;
+		width: 1.75rem;
+		height: 1.75rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		margin-top: 0.1rem;
+		border: none;
+		border-radius: 8px;
+		background: transparent;
+		color: var(--color-gray-400);
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.close-btn:hover {
+		background: var(--color-gray-100);
+		color: var(--color-gray-700);
+	}
+
+	.close-btn:active {
+		transform: scale(0.92);
+	}
+
+	.close-btn svg {
+		width: 0.85rem;
+		height: 0.85rem;
+	}
+
+	/* Body / scrollable area */
+	.panel-body {
+		padding: 0 1.25rem 1rem;
+		overflow-y: auto;
+		flex: 1;
+		min-height: 0;
+	}
+
+	/* Custom scrollbar */
+	.panel-body::-webkit-scrollbar {
+		width: 5px;
+	}
+
+	.panel-body::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.panel-body::-webkit-scrollbar-thumb {
+		background: var(--color-gray-200);
+		border-radius: 100px;
+	}
+
+	.panel-body::-webkit-scrollbar-thumb:hover {
+		background: var(--color-gray-300);
+	}
+
+	/* Properties */
+	.properties {
+		margin: 0;
+		padding: 0;
+	}
+
+	.separator {
+		height: 1px;
+		background: var(--color-gray-100);
+		margin: 0.125rem 0;
+	}
+
+	.property {
+		padding: 0.5rem 0;
+	}
+
+	.property dt {
+		font-size: 0.65rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--color-gray-400);
+		margin-bottom: 0.15rem;
+		line-height: 1;
+	}
+
+	.property dd {
+		margin: 0;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--color-gray-800);
+		line-height: 1.4;
+		word-break: break-word;
+	}
+
+	.empty-state {
+		margin: 0.5rem 0 0;
+		font-size: 0.8rem;
+		color: var(--color-gray-400);
+		font-style: italic;
+	}
+
+	/* ── Responsive ── */
+
+	@media (max-width: 768px) {
+		.info-panel {
+			width: auto;
+			max-width: none;
+			left: max(env(safe-area-inset-left), 10px);
+			right: max(env(safe-area-inset-right), 10px);
+			top: calc(max(env(safe-area-inset-top), 10px) + 80px);
+			max-height: calc(100vh - 220px);
+		}
+	}
+
 	@media (max-width: 768px) and (orientation: landscape) {
 		.info-panel {
 			max-height: calc(100vh - 120px);
@@ -95,23 +307,25 @@
 		}
 	}
 
-	@media (max-width: 768px) {
-		.info-panel {
-			width: calc(100% - 20px);
-			max-width: none;
-			left: max(env(safe-area-inset-left), 10px);
-			right: max(env(safe-area-inset-right), 10px);
-			top: calc(max(env(safe-area-inset-top), 10px) + 80px);
-			max-height: calc(100vh - 220px);
-		}
-	}
-
 	@media (max-width: 480px) {
 		.info-panel {
 			top: calc(max(env(safe-area-inset-top), 8px) + 70px);
 			left: max(env(safe-area-inset-left), 8px);
 			right: max(env(safe-area-inset-right), 8px);
 			max-height: calc(100vh - 190px);
+			border-radius: 14px;
+		}
+
+		.panel-header {
+			padding: 0.875rem 1rem 0.75rem;
+		}
+
+		.panel-body {
+			padding: 0 1rem 0.875rem;
+		}
+
+		.territory-name {
+			font-size: 0.95rem;
 		}
 	}
 </style>

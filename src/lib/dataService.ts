@@ -253,6 +253,9 @@ export class DataService {
 			this.worker = null;
 		}
 		this.cache.clear();
+		for (const [, pending] of this.pendingRequests) {
+			pending.reject(new Error('DataService destroyed'));
+		}
 		this.pendingRequests.clear();
 	}
 }

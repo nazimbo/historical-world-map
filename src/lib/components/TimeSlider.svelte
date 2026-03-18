@@ -26,11 +26,17 @@
 		if (e.key === 'ArrowLeft' && periodIndex > 0) {
 			e.preventDefault();
 			periodIndex = periodIndex - 1;
-			onperiodchange(periodIndex);
+			clearTimeout(debounceTimer);
+			debounceTimer = setTimeout(() => {
+				onperiodchange(periodIndex);
+			}, 300);
 		} else if (e.key === 'ArrowRight' && periodIndex < periods.length - 1) {
 			e.preventDefault();
 			periodIndex = periodIndex + 1;
-			onperiodchange(periodIndex);
+			clearTimeout(debounceTimer);
+			debounceTimer = setTimeout(() => {
+				onperiodchange(periodIndex);
+			}, 300);
 		}
 	}
 </script>
