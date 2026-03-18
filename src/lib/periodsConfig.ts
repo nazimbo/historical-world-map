@@ -1,9 +1,19 @@
+/**
+ * A historical time period displayed on the map.
+ */
 export interface Period {
+	/** Numeric year. Negative values represent BC (e.g. -3000 = 3000 BC), positive values represent AD. */
 	year: number;
+	/** TopoJSON filename in static/data/ (e.g. "world_bc3000.topojson"). */
 	file: string;
+	/** Human-readable label shown in the UI (e.g. "3000 BC"). */
 	label: string;
 }
 
+/**
+ * All 52 historical periods, sorted chronologically from 123,000 BC to 2010 AD.
+ * Sourced from the Historical Basemaps dataset by Euratlas-Nüssli.
+ */
 export const PERIODS: Period[] = [
 	{ year: -123000, file: 'world_bc123000.topojson', label: '123000 BC' },
 	{ year: -10000, file: 'world_bc10000.topojson', label: '10000 BC' },
