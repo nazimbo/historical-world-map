@@ -7,7 +7,7 @@ Built with SvelteKit, TypeScript, MapLibre GL, and Tailwind CSS.
 ## Features
 
 - **Interactive World Map**: Pan and zoom through historical territories with MapLibre GL (WebGL-based rendering)
-- **Comprehensive Timeline**: Navigate through 52 historical periods (123,000 BC to 2010 AD)
+- **Comprehensive Timeline**: Navigate through 53 historical periods (123,000 BC to 2010 AD)
 - **Territory Selection**: Click on any territory to view detailed information with persistent highlighting
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices with touch-friendly controls
 - **Accessibility**: Keyboard navigation, screen reader support, ARIA labels, and focus management
@@ -58,7 +58,7 @@ historical-world-map/
 │   ├── lib/
 │   │   ├── index.ts                # Library barrel exports
 │   │   ├── dataService.ts          # Data loading, LRU cache, Web Worker coordination
-│   │   ├── periodsConfig.ts        # 52 historical period definitions (year, file, label)
+│   │   ├── periodsConfig.ts        # 53 historical period definitions (year, file, label)
 │   │   ├── worker.ts               # Web Worker: fetches TopoJSON + converts to GeoJSON
 │   │   └── components/
 │   │       ├── Map.svelte           # MapLibre GL map with territory layers
@@ -70,7 +70,7 @@ historical-world-map/
 │       ├── +layout.svelte          # Root layout (imports global CSS)
 │       ├── +layout.ts              # Layout config (prerender, SSR off)
 │       └── +page.svelte            # Main page: composes all components
-├── data/                           # Source GeoJSON files (52 periods)
+├── data/                           # Source GeoJSON files (53 periods)
 ├── static/data/                    # Processed TopoJSON files served at runtime
 ├── scripts/
 │   └── convert-topojson.js         # GeoJSON -> TopoJSON conversion script
@@ -114,7 +114,7 @@ TimeSlider (user input)
 
 - **`worker.ts`** (`src/lib/worker.ts`): Runs in a Web Worker context. Receives `{id, file}` messages, fetches the TopoJSON file, converts it to GeoJSON using `topojson-client`, and posts back `{id, geojson}` or `{id, error}`.
 
-- **`periodsConfig.ts`** (`src/lib/periodsConfig.ts`): Defines the 52 historical periods as an array of `{year, file, label}` objects. Years use negative numbers for BC (e.g., `-3000` = 3000 BC) and positive for AD.
+- **`periodsConfig.ts`** (`src/lib/periodsConfig.ts`): Defines the 53 historical periods as an array of `{year, file, label}` objects. Years use negative numbers for BC (e.g., `-3000` = 3000 BC) and positive for AD.
 
 - **`Map.svelte`** (`src/lib/components/Map.svelte`): Initializes MapLibre GL with CartoDB Light basemap tiles. Adds a `territories` GeoJSON source with fill and line layers. Supports hover highlighting and click selection via MapLibre feature state. Reactively updates when `geojsonData` prop changes.
 
@@ -145,13 +145,13 @@ This applies quantization (1e6 precision) and logs file-size reduction for each 
 
 ### Periods Covered
 
-52 time periods across three eras:
+53 time periods across three eras:
 
 | Era | Range | Count |
 |---|---|---|
 | Prehistoric | 123,000 BC - 1 BC | 17 |
 | Ancient & Medieval | 100 AD - 1400 AD | 15 |
-| Modern | 1492 AD - 2010 AD | 20 |
+| Modern | 1492 AD - 2010 AD | 21 |
 
 ### GeoJSON Feature Properties
 

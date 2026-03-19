@@ -11,7 +11,7 @@ export interface Period {
 }
 
 /**
- * All 52 historical periods, sorted chronologically from 123,000 BC to 2010 AD.
+ * All 53 historical periods, sorted chronologically from 123,000 BC to 2010 AD.
  * Sourced from the Historical Basemaps dataset by Euratlas-Nüssli.
  */
 export const PERIODS: Period[] = [
