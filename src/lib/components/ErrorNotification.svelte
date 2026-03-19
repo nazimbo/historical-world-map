@@ -14,24 +14,90 @@
 </script>
 
 <div
-	class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl p-6 md:p-8 max-w-[500px] w-[90vw] z-[2000] shadow-xl"
+	class="error-card"
 	transition:fly={{ y: -20, duration: reducedMotion ? 0 : 300 }}
 	role="alert"
 >
-	<h4 class="text-error-dark font-semibold text-lg mb-3">Loading Error</h4>
-	<p class="text-gray-700 leading-relaxed mb-5">{message}</p>
-	<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
-		<button
-			class="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer text-sm"
-			onclick={ondismiss}
-		>
-			Dismiss
-		</button>
-		<button
-			class="px-4 py-2 border-none rounded-lg font-medium text-white bg-error hover:bg-error-dark transition-colors cursor-pointer text-sm"
-			onclick={onretry}
-		>
-			Retry
-		</button>
+	<h4>Loading Error</h4>
+	<p>{message}</p>
+	<div class="actions">
+		<button class="btn-secondary" onclick={ondismiss}>Dismiss</button>
+		<button class="btn-primary" onclick={onretry}>Retry</button>
 	</div>
 </div>
+
+<style>
+	.error-card {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		z-index: 2000;
+		max-width: 500px;
+		width: 90vw;
+		padding: 1.5rem 2rem;
+		background: var(--glass-bg-heavy);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid var(--glass-border);
+		border-radius: 1rem;
+		box-shadow: var(--glass-shadow);
+	}
+
+	h4 {
+		color: #ef4444;
+		font-weight: 600;
+		font-size: 1.1rem;
+		margin: 0 0 0.75rem;
+	}
+
+	p {
+		color: var(--text-2);
+		line-height: 1.6;
+		margin: 0 0 1.25rem;
+	}
+
+	.actions {
+		display: flex;
+		flex-direction: column-reverse;
+		gap: 0.5rem;
+	}
+
+	@media (min-width: 640px) {
+		.actions {
+			flex-direction: row;
+			justify-content: flex-end;
+			gap: 0.75rem;
+		}
+	}
+
+	button {
+		padding: 0.5rem 1rem;
+		border-radius: 0.5rem;
+		font-weight: 500;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn-secondary {
+		background: var(--btn-sec-bg);
+		border: 1px solid var(--btn-sec-border);
+		color: var(--btn-sec-text);
+	}
+
+	.btn-secondary:hover {
+		background: var(--btn-sec-hover);
+		color: var(--text-1);
+	}
+
+	.btn-primary {
+		background: #ef4444;
+		border: none;
+		color: white;
+	}
+
+	.btn-primary:hover {
+		background: #dc2626;
+	}
+</style>

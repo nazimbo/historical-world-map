@@ -13,42 +13,58 @@
 
 {#if isLoading}
 	<div
-		class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-200 p-6 md:p-10 rounded-xl text-center shadow-lg z-[1000]"
+		class="loading-card"
 		role="status"
 		aria-live="polite"
 		transition:fade={{ duration: reducedMotion ? 0 : 200 }}
 	>
 		<div class="spinner"></div>
-		<p class="text-gray-700 font-medium">Loading historical data...</p>
+		<p>Loading historical data...</p>
 	</div>
 {/if}
 
 <style>
+	.loading-card {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		z-index: 1000;
+		padding: 2rem 2.5rem;
+		background: var(--glass-bg-heavy);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid var(--glass-border);
+		border-radius: 1rem;
+		text-align: center;
+		box-shadow: var(--glass-shadow);
+	}
+
+	.loading-card p {
+		color: var(--text-2);
+		font-weight: 500;
+		margin: 0;
+	}
+
 	.spinner {
 		position: relative;
-		width: 50px;
-		height: 50px;
+		width: 44px;
+		height: 44px;
 		margin: 0 auto 1rem;
 	}
 
 	.spinner::after {
 		content: '';
 		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		border: 3px solid var(--color-gray-200);
-		border-top: 3px solid var(--color-primary);
+		inset: 0;
+		border: 3px solid var(--separator);
+		border-top-color: var(--accent);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
 
 	@keyframes spin {
-		0% {
-			transform: rotate(0deg);
-		}
-		100% {
+		to {
 			transform: rotate(360deg);
 		}
 	}

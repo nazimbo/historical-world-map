@@ -58,10 +58,8 @@
 		role="region"
 		aria-label="Territory information"
 	>
-		<!-- Accent bar -->
 		<div class="accent-bar" aria-hidden="true"></div>
 
-		<!-- Header -->
 		<div class="panel-header">
 			<div class="header-content">
 				<h3 class="territory-name">{getTerritoryName(territory)}</h3>
@@ -83,7 +81,6 @@
 			</button>
 		</div>
 
-		<!-- Properties -->
 		{#if entries.length > 0}
 			<div class="panel-body">
 				<dl class="properties">
@@ -116,15 +113,12 @@
 		max-height: min(440px, 60dvh);
 		display: flex;
 		flex-direction: column;
-		background: rgba(255, 255, 255, 0.92);
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		border: 1px solid rgba(229, 231, 235, 0.8);
+		background: var(--glass-bg-heavy);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid var(--glass-border);
 		border-radius: 16px;
-		box-shadow:
-			0 4px 6px -1px rgba(0, 0, 0, 0.05),
-			0 10px 22px -4px rgba(0, 0, 0, 0.08),
-			0 0 0 1px rgba(0, 0, 0, 0.02);
+		box-shadow: var(--glass-shadow);
 		z-index: 1000;
 		overflow: hidden;
 		user-select: text;
@@ -134,14 +128,12 @@
 		outline: none;
 	}
 
-	/* Accent gradient bar */
 	.accent-bar {
 		height: 3px;
-		background: linear-gradient(90deg, #f39c12, #e67e22, #f39c12);
+		background: linear-gradient(90deg, var(--bar-start), var(--bar-mid), var(--bar-start));
 		flex-shrink: 0;
 	}
 
-	/* Header */
 	.panel-header {
 		display: flex;
 		align-items: flex-start;
@@ -160,7 +152,7 @@
 		font-size: 1.05rem;
 		font-weight: 700;
 		line-height: 1.3;
-		color: var(--color-gray-900);
+		color: var(--text-1);
 		letter-spacing: -0.01em;
 	}
 
@@ -172,9 +164,9 @@
 		padding: 0.2rem 0.55rem;
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: #92400e;
-		background: #fef3c7;
-		border: 1px solid #fde68a;
+		color: var(--badge-text);
+		background: var(--badge-bg);
+		border: 1px solid var(--badge-border);
 		border-radius: 100px;
 		letter-spacing: 0.02em;
 		white-space: nowrap;
@@ -199,14 +191,14 @@
 		border: none;
 		border-radius: 8px;
 		background: transparent;
-		color: var(--color-gray-400);
+		color: var(--text-3);
 		cursor: pointer;
 		transition: all 0.15s ease;
 	}
 
 	.close-btn:hover {
-		background: var(--color-gray-100);
-		color: var(--color-gray-700);
+		background: var(--hover-bg);
+		color: var(--text-1);
 	}
 
 	.close-btn:active {
@@ -218,7 +210,6 @@
 		height: 0.85rem;
 	}
 
-	/* Body / scrollable area */
 	.panel-body {
 		padding: 0 1.25rem 1rem;
 		overflow-y: auto;
@@ -226,7 +217,6 @@
 		min-height: 0;
 	}
 
-	/* Custom scrollbar */
 	.panel-body::-webkit-scrollbar {
 		width: 5px;
 	}
@@ -236,15 +226,14 @@
 	}
 
 	.panel-body::-webkit-scrollbar-thumb {
-		background: var(--color-gray-200);
+		background: var(--scrollbar);
 		border-radius: 100px;
 	}
 
 	.panel-body::-webkit-scrollbar-thumb:hover {
-		background: var(--color-gray-300);
+		background: var(--scrollbar-hover);
 	}
 
-	/* Properties */
 	.properties {
 		margin: 0;
 		padding: 0;
@@ -252,7 +241,7 @@
 
 	.separator {
 		height: 1px;
-		background: var(--color-gray-100);
+		background: var(--separator);
 		margin: 0.125rem 0;
 	}
 
@@ -265,7 +254,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--color-gray-400);
+		color: var(--text-3);
 		margin-bottom: 0.15rem;
 		line-height: 1;
 	}
@@ -274,7 +263,7 @@
 		margin: 0;
 		font-size: 0.875rem;
 		font-weight: 500;
-		color: var(--color-gray-800);
+		color: var(--text-1);
 		line-height: 1.4;
 		word-break: break-word;
 	}
@@ -282,11 +271,9 @@
 	.empty-state {
 		margin: 0.5rem 0 0;
 		font-size: 0.8rem;
-		color: var(--color-gray-400);
+		color: var(--text-3);
 		font-style: italic;
 	}
-
-	/* ── Responsive ── */
 
 	@media (max-width: 768px) {
 		.info-panel {

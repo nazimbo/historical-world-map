@@ -41,8 +41,8 @@
 	}
 </script>
 
-<div class="time-controls absolute bottom-5 left-1/2 -translate-x-1/2 bg-white border border-gray-200 px-5 py-4 rounded-2xl z-[1000] min-w-[500px] max-w-[800px] w-[70vw] shadow-lg">
-	<div class="max-w-[800px] mx-auto">
+<div class="time-controls">
+	<div class="slider-inner">
 		<label for="time-slider" class="sr-only">Historical time period</label>
 		<input
 			type="range"
@@ -63,12 +63,11 @@
 			<span>1492 AD</span>
 			<span>2010 AD</span>
 		</div>
-		<div class="text-center text-base font-semibold text-gray-900 mt-2 tracking-wide">
+		<div class="current-label">
 			{periods[periodIndex]?.label ?? ''}
 		</div>
-		<p class="hidden md:block text-center text-[0.6rem] text-gray-400 mt-1.5 leading-tight">
+		<p class="attribution">
 			Data source: <a
-				class="font-semibold text-gray-500 no-underline hover:text-primary hover:underline transition-colors"
 				href="https://github.com/aourednik/historical-basemaps"
 				target="_blank"
 				rel="noopener noreferrer">Historical Basemaps</a>
@@ -77,18 +76,41 @@
 </div>
 
 <style>
+	.time-controls {
+		position: absolute;
+		bottom: 1.25rem;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 1000;
+		min-width: 500px;
+		max-width: 800px;
+		width: 70vw;
+		padding: 1.25rem 1.5rem;
+		background: var(--glass-bg);
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		border: 1px solid var(--glass-border);
+		border-radius: 1rem;
+		box-shadow: var(--glass-shadow);
+	}
+
+	.slider-inner {
+		max-width: 800px;
+		margin: 0 auto;
+	}
+
 	input[type='range'] {
 		width: 100%;
-		height: 6px;
+		height: 5px;
 		border-radius: 10px;
 		background: linear-gradient(
 			to right,
-			var(--color-gray-200) 0%,
-			var(--color-primary-light) 50%,
-			var(--color-primary) 100%
+			var(--track-start) 0%,
+			var(--track-mid) 50%,
+			var(--track-end) 100%
 		);
 		outline: none;
-		margin-bottom: 1.5rem;
+		margin-bottom: 1.25rem;
 		cursor: pointer;
 		appearance: none;
 		-webkit-appearance: none;
@@ -96,42 +118,48 @@
 	}
 
 	input[type='range']:focus-visible {
-		outline: 3px solid var(--color-primary);
+		outline: 3px solid var(--accent);
 		outline-offset: 3px;
 	}
 
 	input[type='range']::-webkit-slider-thumb {
 		appearance: none;
-		width: 24px;
-		height: 24px;
+		width: 22px;
+		height: 22px;
 		border-radius: 50%;
-		background: var(--color-primary);
+		background: var(--accent);
 		cursor: pointer;
-		box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+		box-shadow:
+			0 0 14px var(--thumb-shadow),
+			0 2px 6px rgba(0, 0, 0, 0.2);
 		transition: all 0.2s ease;
-		border: 3px solid white;
+		border: 2px solid var(--thumb-border);
 	}
 
 	input[type='range']::-webkit-slider-thumb:hover {
-		transform: scale(1.1);
-		box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+		transform: scale(1.15);
+		box-shadow:
+			0 0 20px var(--accent-glow),
+			0 4px 10px rgba(0, 0, 0, 0.2);
 	}
 
 	input[type='range']::-moz-range-thumb {
-		width: 24px;
-		height: 24px;
+		width: 22px;
+		height: 22px;
 		border-radius: 50%;
-		background: var(--color-primary);
+		background: var(--accent);
 		cursor: pointer;
-		border: 3px solid white;
-		box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+		border: 2px solid var(--thumb-border);
+		box-shadow:
+			0 0 14px var(--thumb-shadow),
+			0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 
 	.slider-labels {
 		position: relative;
 		display: flex;
 		font-size: 0.7rem;
-		color: var(--color-gray-500);
+		color: var(--text-3);
 		margin-top: 0.75rem;
 		margin-bottom: 0.75rem;
 		height: 1rem;
@@ -172,12 +200,48 @@
 		transform: translateX(-100%);
 	}
 
+	.current-label {
+		text-align: center;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-1);
+		margin-top: 0.5rem;
+		letter-spacing: 0.03em;
+	}
+
+	.attribution {
+		display: none;
+		text-align: center;
+		font-size: 0.6rem;
+		color: var(--text-3);
+		margin-top: 0.75rem;
+		line-height: 1.4;
+	}
+
+	.attribution a {
+		font-weight: 600;
+		color: var(--text-2);
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+
+	.attribution a:hover {
+		color: var(--accent);
+		text-decoration: underline;
+	}
+
+	@media (min-width: 769px) {
+		.attribution {
+			display: block;
+		}
+	}
+
 	@media (max-width: 768px) {
 		.time-controls {
 			bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
 			left: max(env(safe-area-inset-left), 10px);
 			right: max(env(safe-area-inset-right), 10px);
-			translate: none;
+			transform: none;
 			min-width: auto;
 			max-width: none;
 			width: auto;
@@ -190,15 +254,15 @@
 		}
 
 		input[type='range']::-webkit-slider-thumb {
-			width: 32px;
-			height: 32px;
-			border: 4px solid white;
+			width: 30px;
+			height: 30px;
+			border-width: 3px;
 		}
 
 		input[type='range']::-moz-range-thumb {
-			width: 32px;
-			height: 32px;
-			border: 4px solid white;
+			width: 30px;
+			height: 30px;
+			border-width: 3px;
 		}
 
 		.slider-labels {

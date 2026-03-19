@@ -1,55 +1,135 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import maplibregl from 'maplibre-gl';
-	import type { GeoJSON } from 'geojson';
-
 	/**
 	 * @component Map
 	 *
 	 * Renders an interactive MapLibre GL map with historical territory boundaries.
-	 * Territory polygons are styled with three visual states managed via MapLibre
-	 * feature-state (no data re-render required):
-	 *   - Default: blue (named territories) or grey (unnamed)
-	 *   - Hover: increased opacity + thicker border
-	 *   - Selected: orange fill with white border
+	 * Supports light/dark theme switching with different basemap tiles and territory colors.
 	 */
 
+	import { onMount, onDestroy } from 'svelte';
+	import maplibregl from 'maplibre-gl';
+	import type { GeoJSON } from 'geojson';
+
 	interface Props {
-		/** GeoJSON FeatureCollection of territories to display. Null during initial load. */
 		geojsonData: GeoJSON | null;
-		/** Called when a territory polygon is clicked, with the feature's properties. */
+		theme: 'light' | 'dark';
 		onTerritoryClick: (properties: Record<string, unknown>) => void;
-		/** Called when the user clicks empty map area (deselects current territory). */
 		onTerritoryDeselect: () => void;
 	}
 
-	let { geojsonData, onTerritoryClick, onTerritoryDeselect }: Props = $props();
+	let { geojsonData, theme, onTerritoryClick, onTerritoryDeselect }: Props = $props();
 
 	let mapContainer: HTMLDivElement;
 	let map: maplibregl.Map | undefined;
 	let mapReady = $state(false);
 	let selectedFeatureId: string | number | undefined = undefined;
 	let hoveredFeatureId: number | undefined = undefined;
+	let currentTileVariant: string | undefined;
 
-	const MAP_COLORS = {
-		selected: '#f39c12',
-		named: '#3498db',
-		unnamed: '#95a5a6'
-	} as const;
+	interface MapThemeConfig {
+		tiles: string;
+		fill: { selected: string; named: string; unnamed: string };
+		opacity: { selected: number; hover: number; named: number; unnamed: number };
+		line: { selected: string; hover: string; default: string };
+		lineWidth: { selected: number; hover: number; default: number };
+	}
+
+	const THEMES: Record<'light' | 'dark', MapThemeConfig> = {
+		light: {
+			tiles: 'light_all',
+			fill: { selected: '#f39c12', named: '#3498db', unnamed: '#95a5a6' },
+			opacity: { selected: 0.9, hover: 0.9, named: 0.7, unnamed: 0.4 },
+			line: {
+				selected: 'rgba(255, 255, 255, 1)',
+				hover: 'rgba(255, 255, 255, 1)',
+				default: 'rgba(255, 255, 255, 0.8)'
+			},
+			lineWidth: { selected: 4, hover: 3, default: 2 }
+		},
+		dark: {
+			tiles: 'dark_all',
+			fill: { selected: '#f0b429', named: '#4ecdc4', unnamed: '#546577' },
+			opacity: { selected: 0.85, hover: 0.75, named: 0.55, unnamed: 0.25 },
+			line: {
+				selected: 'rgba(255, 255, 255, 0.7)',
+				hover: 'rgba(255, 255, 255, 0.5)',
+				default: 'rgba(255, 255, 255, 0.2)'
+			},
+			lineWidth: { selected: 3, hover: 2, default: 1 }
+		}
+	};
 
 	const EMPTY_GEOJSON: GeoJSON.FeatureCollection = {
 		type: 'FeatureCollection',
 		features: []
 	};
 
-	// Data has NAME: null for unnamed territories, so ['has'] alone is insufficient.
-	// coalesce picks the first non-null value; to-boolean treats null and "" as false.
 	const HAS_NAME: maplibregl.ExpressionSpecification = [
 		'to-boolean',
 		['coalesce', ['get', 'NAME'], ['get', 'name'], ['get', 'NAME_EN']]
 	];
 
+	function buildFillColor(t: MapThemeConfig): maplibregl.ExpressionSpecification {
+		return [
+			'case',
+			['boolean', ['feature-state', 'selected'], false],
+			t.fill.selected,
+			['case', HAS_NAME, t.fill.named, t.fill.unnamed]
+		];
+	}
+
+	function buildFillOpacity(t: MapThemeConfig): maplibregl.ExpressionSpecification {
+		return [
+			'case',
+			['boolean', ['feature-state', 'selected'], false],
+			t.opacity.selected,
+			[
+				'case',
+				['boolean', ['feature-state', 'hover'], false],
+				t.opacity.hover,
+				['case', HAS_NAME, t.opacity.named, t.opacity.unnamed]
+			]
+		];
+	}
+
+	function buildLineColor(t: MapThemeConfig): maplibregl.ExpressionSpecification {
+		return [
+			'case',
+			['boolean', ['feature-state', 'selected'], false],
+			t.line.selected,
+			[
+				'case',
+				['boolean', ['feature-state', 'hover'], false],
+				t.line.hover,
+				t.line.default
+			]
+		];
+	}
+
+	function buildLineWidth(t: MapThemeConfig): maplibregl.ExpressionSpecification {
+		return [
+			'case',
+			['boolean', ['feature-state', 'selected'], false],
+			t.lineWidth.selected,
+			[
+				'case',
+				['boolean', ['feature-state', 'hover'], false],
+				t.lineWidth.hover,
+				t.lineWidth.default
+			]
+		];
+	}
+
+	function tileUrls(variant: string) {
+		return ['a', 'b', 'c', 'd'].map(
+			(s) => `https://${s}.basemaps.cartocdn.com/${variant}/{z}/{x}/{y}.png`
+		);
+	}
+
 	onMount(() => {
+		const t = THEMES[theme];
+		currentTileVariant = t.tiles;
+
 		map = new maplibregl.Map({
 			container: mapContainer,
 			style: {
@@ -57,12 +137,7 @@
 				sources: {
 					carto: {
 						type: 'raster',
-						tiles: [
-							'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-							'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-							'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-							'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
-						],
+						tiles: tileUrls(t.tiles),
 						tileSize: 256,
 						attribution:
 							'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -90,79 +165,32 @@
 		map.on('load', () => {
 			if (!map) return;
 
-			// generateId: true assigns sequential numeric IDs to features,
-			// which is required for setFeatureState (hover/selection) to work.
 			map.addSource('territories', {
 				type: 'geojson',
 				data: EMPTY_GEOJSON,
 				generateId: true
 			});
 
-			// Fill layer: uses nested MapLibre expressions to determine color
-			// and opacity based on feature-state (selected, hover) and whether
-			// the feature has a name property. Priority order:
-			//   1. Selected (orange, 0.9 opacity)
-			//   2. Hovered (keeps base color, 0.9 opacity)
-			//   3. Named territory (blue, 0.7 opacity)
-			//   4. Unnamed territory (grey, 0.4 opacity)
 			map.addLayer({
 				id: 'territories-fill',
 				type: 'fill',
 				source: 'territories',
 				paint: {
-					'fill-color': [
-						'case',
-						['boolean', ['feature-state', 'selected'], false],
-						MAP_COLORS.selected,
-						['case', HAS_NAME, MAP_COLORS.named, MAP_COLORS.unnamed]
-					],
-					'fill-opacity': [
-						'case',
-						['boolean', ['feature-state', 'selected'], false],
-						0.9,
-						[
-							'case',
-							['boolean', ['feature-state', 'hover'], false],
-							0.9,
-							['case', HAS_NAME, 0.7, 0.4]
-						]
-					]
+					'fill-color': buildFillColor(t),
+					'fill-opacity': buildFillOpacity(t)
 				}
 			});
 
-			// Border layer: white borders that thicken on hover/selection to
-			// provide visual feedback without re-rendering geometry.
 			map.addLayer({
 				id: 'territories-line',
 				type: 'line',
 				source: 'territories',
 				paint: {
-					'line-color': [
-						'case',
-						['boolean', ['feature-state', 'selected'], false],
-						'rgba(255, 255, 255, 1)',
-						[
-							'case',
-							['boolean', ['feature-state', 'hover'], false],
-							'rgba(255, 255, 255, 1)',
-							'rgba(255, 255, 255, 0.8)'
-						]
-					],
-					'line-width': [
-						'case',
-						['boolean', ['feature-state', 'selected'], false],
-						4,
-						[
-							'case',
-							['boolean', ['feature-state', 'hover'], false],
-							3,
-							2
-						]
-					]
+					'line-color': buildLineColor(t),
+					'line-width': buildLineWidth(t)
 				}
 			});
 
-			// Mark map as ready — this triggers the $effect to apply any pending data
 			mapReady = true;
 		});
 
@@ -209,10 +237,6 @@
 			onTerritoryClick(feature.properties as Record<string, unknown>);
 		});
 
-		// Generic click handler: fires for *all* clicks on the map. If the click
-		// didn't hit a territory polygon, clear the current selection. This is
-		// separate from the territories-fill click handler above because MapLibre
-		// fires layer-specific handlers only when features are hit.
 		map.on('click', (e) => {
 			if (!map) return;
 			const features = map.queryRenderedFeatures(e.point, {
@@ -225,12 +249,44 @@
 		});
 	});
 
+	// React to theme changes: swap basemap tiles and update territory paint
+	$effect(() => {
+		if (!map || !mapReady) return;
+		const t = THEMES[theme];
+
+		if (currentTileVariant !== t.tiles) {
+			currentTileVariant = t.tiles;
+			if (map.getLayer('carto-tiles')) map.removeLayer('carto-tiles');
+			if (map.getSource('carto')) map.removeSource('carto');
+			map.addSource('carto', {
+				type: 'raster',
+				tiles: tileUrls(t.tiles),
+				tileSize: 256,
+				attribution:
+					'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+			});
+			map.addLayer(
+				{
+					id: 'carto-tiles',
+					type: 'raster',
+					source: 'carto',
+					minzoom: 0,
+					maxzoom: 19
+				},
+				'territories-fill'
+			);
+		}
+
+		map.setPaintProperty('territories-fill', 'fill-color', buildFillColor(t));
+		map.setPaintProperty('territories-fill', 'fill-opacity', buildFillOpacity(t));
+		map.setPaintProperty('territories-line', 'line-color', buildLineColor(t));
+		map.setPaintProperty('territories-line', 'line-width', buildLineWidth(t));
+	});
+
 	function updateMapData(data: GeoJSON) {
 		if (!map) return;
 		const source = map.getSource('territories') as maplibregl.GeoJSONSource | undefined;
 		if (source) {
-			// Clear all feature-state (selected + hover) before replacing data
-			// to prevent stale state leaking to features with reused IDs
 			map.removeFeatureState({ source: 'territories' });
 			selectedFeatureId = undefined;
 			hoveredFeatureId = undefined;
@@ -248,7 +304,6 @@
 		}
 	}
 
-	// React to both geojsonData changes AND mapReady becoming true
 	$effect(() => {
 		if (geojsonData && mapReady) {
 			updateMapData(geojsonData);
