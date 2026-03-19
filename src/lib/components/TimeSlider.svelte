@@ -174,7 +174,7 @@
 
 	@media (max-width: 768px) {
 		.time-controls {
-			bottom: max(env(safe-area-inset-bottom), 10px);
+			bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
 			left: max(env(safe-area-inset-left), 10px);
 			right: max(env(safe-area-inset-right), 10px);
 			translate: none;
@@ -220,7 +220,7 @@
 
 	@media (max-width: 480px) {
 		.time-controls {
-			bottom: max(env(safe-area-inset-bottom), 8px);
+			bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
 			left: max(env(safe-area-inset-left), 8px);
 			right: max(env(safe-area-inset-right), 8px);
 			padding: 1rem;
