@@ -89,7 +89,7 @@
 	<title>Historical Interactive World Map</title>
 </svelte:head>
 
-<main class="flex flex-col h-screen relative overflow-hidden">
+<main class="main-container flex flex-col relative overflow-hidden">
 	<header class="header absolute top-5 left-5 right-5 z-[1000] bg-white/90 border border-gray-200 rounded-xl shadow-md px-4 py-3 text-center">
 		<h1 class="text-lg font-semibold text-gray-900 m-0 inline-flex items-center gap-2 tracking-tight">
 			<span aria-hidden="true">🌍</span>
@@ -126,19 +126,14 @@
 		/>
 	{/if}
 
-	<footer class="footer absolute bottom-5 right-5 bg-white border border-gray-200 px-3 py-2 text-center text-xs rounded-xl z-[1000] shadow-sm hidden md:block">
-		<p class="m-0 text-gray-600 leading-snug">
-			Data source: <a
-				class="text-primary font-semibold no-underline hover:text-primary-dark hover:underline transition-colors"
-				href="https://github.com/aourednik/historical-basemaps"
-				target="_blank"
-				rel="noopener noreferrer">Historical Basemaps</a
-			>
-		</p>
-	</footer>
 </main>
 
 <style>
+	.main-container {
+		height: 100vh;
+		height: 100dvh;
+	}
+
 	@media (max-width: 768px) {
 		.header {
 			top: max(env(safe-area-inset-top), 10px);

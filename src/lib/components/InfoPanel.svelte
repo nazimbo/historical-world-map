@@ -10,6 +10,7 @@
 	let { territory, periodLabel, onclose }: Props = $props();
 
 	let panelElement: HTMLDivElement | undefined = $state();
+	let innerWidth = $state(1024);
 
 	const reducedMotion =
 		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -46,13 +47,13 @@
 	});
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} bind:innerWidth />
 
 {#if territory}
 	<div
 		class="info-panel"
 		bind:this={panelElement}
-		transition:fly={{ x: 340, duration: reducedMotion ? 0 : 350, opacity: 0.5 }}
+		transition:fly={{ x: innerWidth > 768 ? 340 : 0, y: innerWidth <= 768 ? 300 : 0, duration: reducedMotion ? 0 : 350, opacity: 0.5 }}
 		tabindex="-1"
 		role="region"
 		aria-label="Territory information"
@@ -111,7 +112,8 @@
 		top: 1.25rem;
 		right: 1.25rem;
 		width: 320px;
-		max-height: 440px;
+		max-height: min(440px, 60vh);
+		max-height: min(440px, 60dvh);
 		display: flex;
 		flex-direction: column;
 		background: rgba(255, 255, 255, 0.92);
@@ -292,27 +294,33 @@
 			max-width: none;
 			left: max(env(safe-area-inset-left), 10px);
 			right: max(env(safe-area-inset-right), 10px);
-			top: calc(max(env(safe-area-inset-top), 10px) + 80px);
-			max-height: calc(100vh - 220px);
+			top: auto;
+			bottom: calc(max(env(safe-area-inset-bottom), 10px) + 115px);
+			max-height: 40vh;
+			max-height: 40dvh;
 		}
 	}
 
 	@media (max-width: 768px) and (orientation: landscape) {
 		.info-panel {
-			max-height: calc(100vh - 120px);
-			width: 300px;
+			top: calc(env(safe-area-inset-top, 10px) + 50px);
+			bottom: auto;
+			max-height: calc(100vh - 130px);
+			max-height: calc(100dvh - 130px);
+			width: 280px;
 			left: auto;
 			right: env(safe-area-inset-right, 10px);
-			top: calc(env(safe-area-inset-top, 10px) + 50px);
 		}
 	}
 
 	@media (max-width: 480px) {
 		.info-panel {
-			top: calc(max(env(safe-area-inset-top), 8px) + 70px);
+			top: auto;
+			bottom: calc(max(env(safe-area-inset-bottom), 8px) + 100px);
 			left: max(env(safe-area-inset-left), 8px);
 			right: max(env(safe-area-inset-right), 8px);
-			max-height: calc(100vh - 190px);
+			max-height: 40vh;
+			max-height: 40dvh;
 			border-radius: 14px;
 		}
 

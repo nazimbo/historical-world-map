@@ -66,6 +66,13 @@
 		<div class="text-center text-base font-semibold text-gray-900 mt-2 tracking-wide">
 			{periods[periodIndex]?.label ?? ''}
 		</div>
+		<p class="hidden md:block text-center text-[0.6rem] text-gray-400 mt-1.5 leading-tight">
+			Data source: <a
+				class="font-semibold text-gray-500 no-underline hover:text-primary hover:underline transition-colors"
+				href="https://github.com/aourednik/historical-basemaps"
+				target="_blank"
+				rel="noopener noreferrer">Historical Basemaps</a>
+		</p>
 	</div>
 </div>
 
@@ -155,6 +162,14 @@
 	}
 	.slider-labels span:nth-child(6) {
 		left: 100%;
+	}
+
+	.slider-labels span:first-child {
+		transform: translateX(0);
+	}
+
+	.slider-labels span:last-child {
+		transform: translateX(-100%);
 	}
 
 	@media (max-width: 768px) {
